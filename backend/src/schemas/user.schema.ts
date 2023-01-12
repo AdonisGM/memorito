@@ -6,7 +6,7 @@ export type UserDocument = HydratedDocument<User>;
 // nested schema
 @Schema({ _id: false })
 export class Active extends Document {
-  @Prop({ required: true })
+  @Prop({ required: true, default: false })
   status: boolean;
 
   @Prop({ required: true })
@@ -14,6 +14,23 @@ export class Active extends Document {
 }
 
 export const ActiveSchema = SchemaFactory.createForClass(Active);
+
+@Schema({_id: false})
+export class RefreshToken {
+  @Prop({required: true})
+  value: string
+
+  @Prop({required: true})
+  ip: string
+
+  @Prop({required: true})
+  address: string
+
+  @Prop({required: true})
+  device: string
+}
+
+export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken)
 
 // parent schema
 @Schema({ timestamps: true })
@@ -31,7 +48,7 @@ export class User {
   password: string;
 
   @Prop({ required: true, default: [] })
-  token: string[];
+  refreshTokens: RefreshToken[];
 
   @Prop({ required: true })
   active: Active;
