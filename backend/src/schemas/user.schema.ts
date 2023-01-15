@@ -20,13 +20,13 @@ export class RefreshToken {
   @Prop({required: true})
   value: string
 
-  @Prop({required: true})
+  @Prop({required: false})
   ip: string
 
-  @Prop({required: true})
+  @Prop({required: false})
   address: string
 
-  @Prop({required: true})
+  @Prop({required: false})
   device: string
 }
 
@@ -35,7 +35,7 @@ export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken)
 // parent schema
 @Schema({ timestamps: true })
 export class User {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   userId: string;
 
   @Prop({ required: true })
