@@ -5,16 +5,10 @@ import {
 	HttpException,
 } from '@nestjs/common';
 import {Request, Response} from 'express';
-
-interface IErrorCodeCustom {
-	[code: string]: string;
-}
-
-interface IObjectExceptionResponse {
-	message: string | string[],
-	error: string,
-	statusCode: number
-}
+import {
+	IErrorCodeCustom,
+	IObjectExceptionResponse,
+} from '../auth/auth.interface';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -22,14 +16,16 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
 	constructor() {
 		this.errorCodeCustom = {
-			'error_auth_00000': 'An unknown error',
-			'error_auth_00001': 'Exist email in database',
-			'error_auth_00002': 'Password invalid',
-			'error_auth_00003': 'Email invalid',
-			'error_auth_00004': 'Name invalid',
-			'error_auth_00005': 'Email or password are not correct',
-			'error_auth_00006': 'User not active',
-			'error_auth_00007': 'refresh token invalid',
+			error_auth_00000: 'An unknown error',
+			error_auth_00001: 'Exist email in database',
+			error_auth_00002: 'Password invalid',
+			error_auth_00003: 'Email invalid',
+			error_auth_00004: 'Name invalid',
+			error_auth_00005: 'Email or password are not correct',
+			error_auth_00006: 'User not active',
+			error_auth_00007: 'Refresh token invalid',
+			error_auth_00008: 'Generate new token fail',
+			error_auth_00009: 'User not setup password'
 		};
 	}
 
@@ -54,7 +50,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			timestamp: new Date().toISOString(),
 			message: {
 				code: selectMessage,
-				value: this.errorCodeCustom[selectMessage]
+				value: this.errorCodeCustom[selectMessage],
 			},
 			error: data.error,
 			path: request.url,

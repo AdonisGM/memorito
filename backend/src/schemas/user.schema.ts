@@ -15,22 +15,25 @@ export class Active extends Document {
 
 export const ActiveSchema = SchemaFactory.createForClass(Active);
 
-@Schema({_id: false})
+@Schema({ _id: false })
 export class RefreshToken {
+  @Prop({ required: true })
+  value: string;
+
+  @Prop({ required: false })
+  ip?: string;
+
+  @Prop({ required: false })
+  address?: string;
+
+  @Prop({ required: false })
+  device?: string;
+
   @Prop({required: true})
-  value: string
-
-  @Prop({required: false})
-  ip: string
-
-  @Prop({required: false})
-  address: string
-
-  @Prop({required: false})
-  device: string
+  exp: number;
 }
 
-export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken)
+export const RefreshTokenSchema = SchemaFactory.createForClass(RefreshToken);
 
 // parent schema
 @Schema({ timestamps: true })
@@ -45,7 +48,7 @@ export class User {
   email: string;
 
   @Prop({ required: false })
-  password: string;
+  password?: string;
 
   @Prop({ required: true, default: [] })
   refreshTokens: RefreshToken[];

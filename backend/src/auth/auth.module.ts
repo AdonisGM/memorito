@@ -3,7 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import {JwtModule} from "@nestjs/jwt";
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -13,7 +13,7 @@ import {JwtModule} from "@nestjs/jwt";
         schema: UserSchema,
       },
     ]),
-    JwtModule.register({})
+    JwtModule.register({}),
   ],
   controllers: [AuthController],
   providers: [AuthService],
