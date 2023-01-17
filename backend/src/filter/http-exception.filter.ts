@@ -28,6 +28,10 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00009: 'User not setup password',
 			error_auth_00010: 'Old password should not be empty',
 			error_auth_00011: 'New password should not be empty',
+			error_auth_00012: 'New password must different old password',
+			error_auth_00013: 'Change password fail',
+			error_auth_00014: 'User not setup password',
+			error_auth_00015: 'Old password not correct',
 		};
 	}
 

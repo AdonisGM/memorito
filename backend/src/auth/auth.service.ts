@@ -5,7 +5,7 @@ import {User, UserDocument} from '../schemas/user.schema';
 import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
-import {PasswordSigninDto, RenewTokenDto, PasswordSignupDto, ChangePasswordDto} from './dto';
+import {ChangePasswordDto, PasswordSigninDto, PasswordSignupDto, RenewTokenDto} from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
 import {IJwtPayload} from './auth.interface';
@@ -25,15 +25,14 @@ export class AuthService {
 	async signup(dto: PasswordSignupDto) {
 		const {name, email, password} = dto;
 
-		const genSalt = await bcrypt.genSalt(this.SALT_ROUND);
-		const hashPassword = await bcrypt.hash(password.trim(), genSalt);
+		const hashedPassword = this.hashPassword(password.trim());
 
 		try {
 			await this.mongodbUserService.create({
 				userId: uuidv4(),
 				name: name.trim(),
 				email: email.toLowerCase(),
-				password: hashPassword,
+				password: hashedPassword,
 				active: {
 					code: nanoid(64),
 				},
@@ -121,7 +120,29 @@ export class AuthService {
 	}
 
 	async changePassword(user: IJwtPayload, dto: ChangePasswordDto) {
-		
+		const oldPassword = dto.oldPassword.trim();
+		const newPassword = dto.newPassword.trim();
+
+		if (oldPassword === newPassword) throw new BadRequestException('error_auth_00012');
+
+		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
+		if (!userDb) throw new BadRequestException('error_auth_00013');
+		if (!userDb.password) throw new BadRequestException('error_auth_00014');
+
+		const isCorrectOldPassword = await bcrypt.compare(oldPassword, userDb.password);
+		if (!isCorrectOldPassword) throw new BadRequestException('error_auth_00015');
+
+		userDb.password = await this.hashPassword(oldPassword);
+		await userDb.save();
+
+		return;
+	}
+
+	async checkActive(user: IJwtPayload) {
+		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
+
+		if (!userDb) throw new BadRequestException('error_auth_00006');
+		if (!userDb.active.status) throw new BadRequestException('error_auth_00006');
 	}
 
 	private async deleteExpRefreshToken(user: User): Promise<void> {
@@ -160,5 +181,10 @@ export class AuthService {
 				secret: process.env.JWT_SECRET_REFRESH_KEY,
 			},
 		);
+	}
+
+	private async hashPassword(rawPassword: string): Promise<string> {
+		const genSalt = await bcrypt.genSalt(this.SALT_ROUND);
+		return bcrypt.hash(rawPassword.trim(), genSalt);
 	}
 }
