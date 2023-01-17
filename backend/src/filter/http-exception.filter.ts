@@ -32,6 +32,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00013: 'Change password fail',
 			error_auth_00014: 'User not setup password',
 			error_auth_00015: 'Old password not correct',
+			error_auth_00016: 'Create password fail',
 		};
 	}
 
@@ -40,13 +41,13 @@ export class HttpExceptionFilter implements ExceptionFilter {
 		const response = ctx.getResponse<Response>();
 		const request = ctx.getRequest<Request>();
 		const status = exception.getStatus();
-		const data = exception.getResponse() as IObjectExceptionResponse;
+		const {error, message} = exception.getResponse() as IObjectExceptionResponse;
 
 		let selectMessage: string;
-		if (typeof data.message === 'string') {
-			selectMessage = data.message;
-		} else if (Array.isArray(data.message)) {
-			selectMessage = data.message[0];
+		if (typeof message === 'string') {
+			selectMessage = message;
+		} else if (Array.isArray(message)) {
+			selectMessage = message[0];
 		} else {
 			selectMessage = '';
 		}
@@ -58,7 +59,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 				code: selectMessage,
 				value: this.errorCodeCustom[selectMessage],
 			},
-			error: data.error,
+			error: error,
 			path: request.url,
 		});
 	}

@@ -5,7 +5,7 @@ import {User, UserDocument} from '../schemas/user.schema';
 import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
-import {ChangePasswordDto, PasswordSigninDto, PasswordSignupDto, RenewTokenDto} from './dto';
+import {ChangePasswordDto, CreatePasswordDto, PasswordSigninDto, PasswordSignupDto, RenewTokenDto} from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
 import {IJwtPayload} from './auth.interface';
@@ -117,6 +117,19 @@ export class AuthService {
 		user.save();
 
 		return {accessToken, refreshToken};
+	}
+
+	async createPassword(user: IJwtPayload, dto: CreatePasswordDto) {
+		const newPassword = dto.newPassword.trim();
+
+		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
+		if (!userDb) throw new BadRequestException('error_auth_00016');
+		if (userDb.password) throw new BadRequestException('error_auth_00016');
+
+		userDb.password = await this.hashPassword(newPassword);
+		await userDb.save();
+
+		return;
 	}
 
 	async changePassword(user: IJwtPayload, dto: ChangePasswordDto) {
