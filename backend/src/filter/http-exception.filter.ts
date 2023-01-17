@@ -25,7 +25,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00006: 'User not active',
 			error_auth_00007: 'Refresh token invalid',
 			error_auth_00008: 'Generate new token fail',
-			error_auth_00009: 'User not setup password'
+			error_auth_00009: 'User not setup password',
+			error_auth_00010: 'Old password should not be empty',
+			error_auth_00011: 'New password should not be empty',
 		};
 	}
 

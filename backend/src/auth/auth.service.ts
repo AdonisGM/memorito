@@ -5,7 +5,7 @@ import {User, UserDocument} from '../schemas/user.schema';
 import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
-import {PasswordSigninDto, RenewTokenDto, PasswordSignupDto} from './dto';
+import {PasswordSigninDto, RenewTokenDto, PasswordSignupDto, ChangePasswordDto} from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
 import {IJwtPayload} from './auth.interface';
@@ -97,10 +97,10 @@ export class AuthService {
 		if (!user.active.status) throw new BadRequestException('error_auth_00008');
 
 		const refreshTokenDb = user.refreshTokens.find((refreshToken) => {
-			return refreshToken.value === dto.refreshToken
-		})
-		if (!refreshTokenDb) throw new BadRequestException('error_auth_00008')
-		if (refreshTokenDb.exp < new Date().getTime() / 1000) throw new BadRequestException('error_auth_00008')
+			return refreshToken.value === dto.refreshToken;
+		});
+		if (!refreshTokenDb) throw new BadRequestException('error_auth_00008');
+		if (refreshTokenDb.exp < new Date().getTime() / 1000) throw new BadRequestException('error_auth_00008');
 
 		const accessToken = this.newAccessToken(user);
 		const refreshToken = this.newRefreshToken(user);
@@ -108,6 +108,7 @@ export class AuthService {
 		const newPayload = this.jwtService.decode(refreshToken) as IJwtPayload;
 
 		await this.deleteExpRefreshToken(user);
+		await this.deleteReRefreshToken(user, refreshTokenDb.value);
 
 		user.refreshTokens.push({
 			value: refreshToken,
@@ -119,10 +120,21 @@ export class AuthService {
 		return {accessToken, refreshToken};
 	}
 
+	async changePassword(user: IJwtPayload, dto: ChangePasswordDto) {
+		
+	}
+
 	private async deleteExpRefreshToken(user: User): Promise<void> {
 		await this.mongodbUserService.updateOne(
 			{userId: user.userId},
 			{$pull: {refreshTokens: {exp: {$lt: new Date().getTime() / 1000}}}}
+		);
+	}
+
+	private async deleteReRefreshToken(user: User, refreshToken: string): Promise<void> {
+		await this.mongodbUserService.updateOne(
+			{userId: user.userId},
+			{$pull: {refreshTokens: {value: refreshToken}}}
 		);
 	}
 
