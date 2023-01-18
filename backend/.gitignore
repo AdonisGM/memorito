@@ -36,3 +36,4 @@ lerna-debug.log*
 
 # Enviroment variable
 .env
+dist
