@@ -1,6 +1,13 @@
 import {Body, Controller, Post, UseGuards, Request, HttpCode} from '@nestjs/common';
 import {AuthService} from './auth.service';
-import {PasswordSignupDto, RenewTokenDto, PasswordSigninDto, ChangePasswordDto, CreatePasswordDto} from './dto';
+import {
+	PasswordSignupDto,
+	RenewTokenDto,
+	PasswordSigninDto,
+	ChangePasswordDto,
+	CreatePasswordDto,
+	ActiveAccountDto
+} from './dto';
 import {JwtAuthGuard} from './jwt-auth.guard';
 import {IJwtPayload} from './auth.interface';
 
@@ -40,7 +47,9 @@ export class AuthController {
 		return this.authService.changePassword(req.user, dto)
 	}
 
+	@HttpCode(200)
 	@Post('active')
-	active() {
+	active(@Body() dto: ActiveAccountDto) {
+		return this.authService.activeAccount(dto)
 	}
 }

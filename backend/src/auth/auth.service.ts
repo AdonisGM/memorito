@@ -5,7 +5,14 @@ import {User, UserDocument} from '../schemas/user.schema';
 import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
-import {ChangePasswordDto, CreatePasswordDto, PasswordSigninDto, PasswordSignupDto, RenewTokenDto} from './dto';
+import {
+	ActiveAccountDto,
+	ChangePasswordDto,
+	CreatePasswordDto,
+	PasswordSigninDto,
+	PasswordSignupDto,
+	RenewTokenDto
+} from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
 import {IJwtPayload} from './auth.interface';
@@ -15,6 +22,7 @@ export class AuthService {
 	private readonly SALT_ROUND = 15;
 	private readonly ONE_HOUR = '1h';
 	private readonly SEVEN_DAYS = '7d';
+	private readonly LENGTH_NANOID = 64;
 
 	constructor(
 		@InjectModel(User.name) private mongodbUserService: Model<UserDocument>,
@@ -34,7 +42,7 @@ export class AuthService {
 				email: email.toLowerCase(),
 				password: hashedPassword,
 				active: {
-					code: nanoid(64),
+					code: nanoid(this.LENGTH_NANOID),
 				},
 			});
 		} catch (error) {
@@ -146,6 +154,21 @@ export class AuthService {
 		if (!isCorrectOldPassword) throw new BadRequestException('error_auth_00015');
 
 		userDb.password = await this.hashPassword(oldPassword);
+		await userDb.save();
+
+		return;
+	}
+
+	async activeAccount(dto: ActiveAccountDto) {
+		const userId = dto.userId;
+		const code = dto.code.trim();
+
+		const userDb = await this.mongodbUserService.findOne({userId: userId});
+		if (!userDb) throw new BadRequestException('error_auth_00018');
+		if (userDb.active.status) throw new BadRequestException('error_auth_00019');
+		if (userDb.active.code !== code) throw new BadRequestException('error_auth_00017');
+
+		userDb.active.status = true;
 		await userDb.save();
 
 		return;

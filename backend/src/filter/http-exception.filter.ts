@@ -33,6 +33,9 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00014: 'User not setup password',
 			error_auth_00015: 'Old password not correct',
 			error_auth_00016: 'Create password fail',
+			error_auth_00017: 'Active account fail',
+			error_auth_00018: 'User not exist',
+			error_auth_00019: 'User already active',
 		};
 	}
 
