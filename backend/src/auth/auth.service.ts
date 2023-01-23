@@ -34,6 +34,7 @@ export class AuthService {
 		const {name, email, password} = dto;
 
 		const hashedPassword = this.hashPassword(password.trim());
+		const codeResetPassword = nanoid(this.LENGTH_NANOID);
 
 		try {
 			await this.mongodbUserService.create({
@@ -44,6 +45,7 @@ export class AuthService {
 				active: {
 					code: nanoid(this.LENGTH_NANOID),
 				},
+				codeResetPassword: codeResetPassword
 			});
 		} catch (error) {
 			if (error.code === 11000) {
@@ -52,6 +54,8 @@ export class AuthService {
 				throw new BadRequestException('error_auth_00000');
 			}
 		}
+
+
 
 		return;
 	}

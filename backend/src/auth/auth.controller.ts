@@ -1,4 +1,4 @@
-import {Body, Controller, Post, UseGuards, Request, HttpCode} from '@nestjs/common';
+import {Body, Controller, Post, UseGuards, Request, HttpCode, Get} from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {
 	PasswordSignupDto,
@@ -9,11 +9,11 @@ import {
 	ActiveAccountDto
 } from './dto';
 import {JwtAuthGuard} from './jwt-auth.guard';
-import {IJwtPayload} from './auth.interface';
+import {MailjetService} from '../mailjet/mailjet.service';
 
 @Controller('auth')
 export class AuthController {
-	constructor(private authService: AuthService) {
+	constructor(private authService: AuthService, private mailjetService: MailjetService) {
 	}
 
 	@Post('signup-password')
@@ -51,5 +51,10 @@ export class AuthController {
 	@Post('active')
 	active(@Body() dto: ActiveAccountDto) {
 		return this.authService.activeAccount(dto)
+	}
+
+	@Get('reset-password')
+	resetPassword() {
+		return this.mailjetService.testSendEmail()
 	}
 }

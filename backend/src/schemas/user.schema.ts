@@ -61,6 +61,12 @@ export class User {
 
   @Prop()
   updatedAt: Date;
+
+  @Prop()
+  codeResetPassword?: string
+
+  @Prop()
+  avatar: string
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
