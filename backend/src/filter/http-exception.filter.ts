@@ -39,6 +39,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00019: 'User already active',
 			error_auth_00020: 'Request reset password fail',
 			error_auth_00021: 'Accuracy request fail',
+			error_auth_00022: 'Reset password fail',
 		};
 	}
 

@@ -7,7 +7,7 @@ import {
 	ChangePasswordDto,
 	CreatePasswordDto,
 	ActiveAccountDto,
-	ResetPasswordRequestDto, AccuracyPasswordRequestDto
+	ResetPasswordRequestDto, AccuracyPasswordRequestDto, ResetPasswordDto
 } from './dto';
 import {JwtAuthGuard} from './jwt-auth.guard';
 import {MailjetService} from '../mailjet/mailjet.service';
@@ -57,13 +57,18 @@ export class AuthController {
 
 	@HttpCode(200)
 	@Post('reset-password/request')
-	resetPassword(@Body() dto: ResetPasswordRequestDto) {
+	requestResetPassword(@Body() dto: ResetPasswordRequestDto) {
 		return this.authService.requestResetPassword(dto);
 	}
 
-	@HttpCode(200)
 	@Get('reset-password/accuracy/:userId/:code')
 	accuracyCodeResetPassword(@Param() param: AccuracyPasswordRequestDto) {
 		return this.authService.accuracyCodeResetPassword(param);
+	}
+
+	@HttpCode(200)
+	@Post('reset-password')
+	resetPassword(@Body() dto: ResetPasswordDto) {
+		return this.authService.resetPassword(dto);
 	}
 }

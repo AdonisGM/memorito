@@ -12,7 +12,7 @@ import {
 	CreatePasswordDto,
 	PasswordSigninDto,
 	PasswordSignupDto,
-	RenewTokenDto, ResetPasswordRequestDto
+	RenewTokenDto, ResetPasswordDto, ResetPasswordRequestDto
 } from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
@@ -207,6 +207,25 @@ export class AuthService {
 
 		const isValid = userDb.password.code === code && userDb.password.expCode && userDb.password.expCode >= moment().utc().toDate();
 		if (!isValid) return new BadRequestException('error_auth_00021');
+
+		return;
+	}
+
+	async resetPassword(dto: ResetPasswordDto) {
+		const userId = dto.userId.trim();
+		const code = dto.code.trim();
+		const password = dto.password.trim();
+
+		const userDb = await this.mongodbUserService.findOne({userId: userId});
+		if (!userDb) return new BadRequestException('error_auth_00022');
+
+		const isValid = userDb.password.code === code && userDb.password.expCode && userDb.password.expCode >= moment().utc().toDate();
+		if (!isValid) return new BadRequestException('error_auth_00022');
+
+		userDb.password.value = await this.hashPassword(password);
+		userDb.password.code = undefined;
+		userDb.password.expCode = undefined;
+		userDb.save();
 
 		return;
 	}

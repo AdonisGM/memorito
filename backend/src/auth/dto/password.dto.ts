@@ -35,3 +35,17 @@ export class AccuracyPasswordRequestDto {
 	@IsNotEmpty({message: 'error_auth_00021'})
 	code: string;
 }
+
+export class ResetPasswordDto {
+	@IsNotEmpty({message: 'error_auth_00022'})
+	@Matches(/^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,32}$/, {
+		message: 'error_auth_00022',
+	})
+	password: string;
+
+	@IsNotEmpty({message: 'error_auth_00022'})
+	userId: string;
+
+	@IsNotEmpty({message: 'error_auth_00022'})
+	code: string;
+}
