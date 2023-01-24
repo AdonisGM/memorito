@@ -6,16 +6,18 @@ import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
 import {
+	AccuracyPasswordRequestDto,
 	ActiveAccountDto,
 	ChangePasswordDto,
 	CreatePasswordDto,
 	PasswordSigninDto,
 	PasswordSignupDto,
-	RenewTokenDto
+	RenewTokenDto, ResetPasswordDto, ResetPasswordRequestDto
 } from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
 import {IJwtPayload} from './auth.interface';
+import moment from 'moment/moment';
 
 @Injectable()
 export class AuthService {
@@ -34,16 +36,20 @@ export class AuthService {
 		const {name, email, password} = dto;
 
 		const hashedPassword = this.hashPassword(password.trim());
+		const codeResetPassword = nanoid(this.LENGTH_NANOID);
 
 		try {
 			await this.mongodbUserService.create({
 				userId: uuidv4(),
 				name: name.trim(),
 				email: email.toLowerCase(),
-				password: hashedPassword,
+				password: {
+					value: hashedPassword
+				},
 				active: {
 					code: nanoid(this.LENGTH_NANOID),
 				},
+				codeResetPassword: codeResetPassword
 			});
 		} catch (error) {
 			if (error.code === 11000) {
@@ -52,6 +58,7 @@ export class AuthService {
 				throw new BadRequestException('error_auth_00000');
 			}
 		}
+
 
 		return;
 	}
@@ -62,9 +69,9 @@ export class AuthService {
 		});
 
 		if (!user) throw new BadRequestException('error_auth_00005');
-		if (!user.password) throw new BadRequestException('error_auth_00009');
+		if (!user.password.value) throw new BadRequestException('error_auth_00009');
 
-		const validPassword = await bcrypt.compare(dto.password.trim(), user.password);
+		const validPassword = await bcrypt.compare(dto.password.trim(), user.password.value);
 
 		if (!validPassword) throw new BadRequestException('error_auth_00005');
 		if (!user.active.status) throw new BadRequestException('error_auth_00006');
@@ -107,7 +114,7 @@ export class AuthService {
 			return refreshToken.value === dto.refreshToken;
 		});
 		if (!refreshTokenDb) throw new BadRequestException('error_auth_00008');
-		if (refreshTokenDb.exp < new Date().getTime() / 1000) throw new BadRequestException('error_auth_00008');
+		if (refreshTokenDb.exp < moment().utc().toDate().getTime() / 1000) throw new BadRequestException('error_auth_00008');
 
 		const accessToken = this.newAccessToken(user);
 		const refreshToken = this.newRefreshToken(user);
@@ -132,9 +139,9 @@ export class AuthService {
 
 		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
 		if (!userDb) throw new BadRequestException('error_auth_00016');
-		if (userDb.password) throw new BadRequestException('error_auth_00016');
+		if (userDb.password.value) throw new BadRequestException('error_auth_00016');
 
-		userDb.password = await this.hashPassword(newPassword);
+		userDb.password.value = await this.hashPassword(newPassword);
 		await userDb.save();
 
 		return;
@@ -148,12 +155,12 @@ export class AuthService {
 
 		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
 		if (!userDb) throw new BadRequestException('error_auth_00013');
-		if (!userDb.password) throw new BadRequestException('error_auth_00014');
+		if (!userDb.password.value) throw new BadRequestException('error_auth_00014');
 
-		const isCorrectOldPassword = await bcrypt.compare(oldPassword, userDb.password);
+		const isCorrectOldPassword = await bcrypt.compare(oldPassword, userDb.password.value);
 		if (!isCorrectOldPassword) throw new BadRequestException('error_auth_00015');
 
-		userDb.password = await this.hashPassword(oldPassword);
+		userDb.password.value = await this.hashPassword(oldPassword);
 		await userDb.save();
 
 		return;
@@ -174,6 +181,55 @@ export class AuthService {
 		return;
 	}
 
+	async requestResetPassword(dto: ResetPasswordRequestDto) {
+		const email = dto.email.trim();
+
+		const userDb = await this.mongodbUserService.findOne({email: email});
+		if (!userDb) return new BadRequestException('error_auth_00020');
+
+		const code = nanoid(64);
+		//TODO: send email to user
+
+		userDb.password.code = code;
+		userDb.password.expCode = moment().utc().add(1, 'd').toDate();
+
+		await userDb.save();
+
+		return;
+	}
+
+	async accuracyCodeResetPassword(param: AccuracyPasswordRequestDto) {
+		const userId = param.userId.trim();
+		const code = param.code.trim();
+
+		const userDb = await this.mongodbUserService.findOne({userId: userId});
+		if (!userDb) return new BadRequestException('error_auth_00021');
+
+		const isValid = userDb.password.code === code && userDb.password.expCode && userDb.password.expCode >= moment().utc().toDate();
+		if (!isValid) return new BadRequestException('error_auth_00021');
+
+		return;
+	}
+
+	async resetPassword(dto: ResetPasswordDto) {
+		const userId = dto.userId.trim();
+		const code = dto.code.trim();
+		const password = dto.password.trim();
+
+		const userDb = await this.mongodbUserService.findOne({userId: userId});
+		if (!userDb) return new BadRequestException('error_auth_00022');
+
+		const isValid = userDb.password.code === code && userDb.password.expCode && userDb.password.expCode >= moment().utc().toDate();
+		if (!isValid) return new BadRequestException('error_auth_00022');
+
+		userDb.password.value = await this.hashPassword(password);
+		userDb.password.code = undefined;
+		userDb.password.expCode = undefined;
+		userDb.save();
+
+		return;
+	}
+
 	async checkActive(user: IJwtPayload) {
 		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
 
@@ -184,7 +240,7 @@ export class AuthService {
 	private async deleteExpRefreshToken(user: User): Promise<void> {
 		await this.mongodbUserService.updateOne(
 			{userId: user.userId},
-			{$pull: {refreshTokens: {exp: {$lt: new Date().getTime() / 1000}}}}
+			{$pull: {refreshTokens: {exp: {$lt: moment().utc().toDate().getTime() / 1000}}}}
 		);
 	}
 
