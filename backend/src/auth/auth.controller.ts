@@ -1,4 +1,4 @@
-import {Body, Controller, Post, UseGuards, Request, HttpCode, Get} from '@nestjs/common';
+import {Body, Controller, Post, UseGuards, Request, HttpCode, Get, Param} from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {
 	PasswordSignupDto,
@@ -7,10 +7,11 @@ import {
 	ChangePasswordDto,
 	CreatePasswordDto,
 	ActiveAccountDto,
-	ResetPasswordRequestDto
+	ResetPasswordRequestDto, AccuracyPasswordRequestDto
 } from './dto';
 import {JwtAuthGuard} from './jwt-auth.guard';
 import {MailjetService} from '../mailjet/mailjet.service';
+import moment from 'moment';
 
 @Controller('auth')
 export class AuthController {
@@ -60,5 +61,9 @@ export class AuthController {
 		return this.authService.requestResetPassword(dto);
 	}
 
-
+	@HttpCode(200)
+	@Get('reset-password/accuracy/:userId/:code')
+	accuracyCodeResetPassword(@Param() param: AccuracyPasswordRequestDto) {
+		return this.authService.accuracyCodeResetPassword(param);
+	}
 }

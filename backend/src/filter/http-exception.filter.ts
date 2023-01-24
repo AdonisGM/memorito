@@ -9,6 +9,7 @@ import {
 	IErrorCodeCustom,
 	IObjectExceptionResponse,
 } from '../auth/auth.interface';
+import moment from 'moment/moment';
 
 @Catch(HttpException)
 export class HttpExceptionFilter implements ExceptionFilter {
@@ -36,7 +37,8 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00017: 'Active account fail',
 			error_auth_00018: 'User not exist',
 			error_auth_00019: 'User already active',
-			error_auth_00020: 'Request reset password fail'
+			error_auth_00020: 'Request reset password fail',
+			error_auth_00021: 'Accuracy request fail',
 		};
 	}
 
@@ -58,7 +60,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 
 		response.status(status).json({
 			statusCode: status,
-			timestamp: new Date().toISOString(),
+			timestamp: moment().utc().toISOString(),
 			message: {
 				code: selectMessage,
 				value: this.errorCodeCustom[selectMessage],

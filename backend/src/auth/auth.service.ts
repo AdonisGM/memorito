@@ -6,6 +6,7 @@ import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
 import {
+	AccuracyPasswordRequestDto,
 	ActiveAccountDto,
 	ChangePasswordDto,
 	CreatePasswordDto,
@@ -16,6 +17,7 @@ import {
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
 import {IJwtPayload} from './auth.interface';
+import moment from 'moment/moment';
 
 @Injectable()
 export class AuthService {
@@ -112,7 +114,7 @@ export class AuthService {
 			return refreshToken.value === dto.refreshToken;
 		});
 		if (!refreshTokenDb) throw new BadRequestException('error_auth_00008');
-		if (refreshTokenDb.exp < new Date().getTime() / 1000) throw new BadRequestException('error_auth_00008');
+		if (refreshTokenDb.exp < moment().utc().toDate().getTime() / 1000) throw new BadRequestException('error_auth_00008');
 
 		const accessToken = this.newAccessToken(user);
 		const refreshToken = this.newRefreshToken(user);
@@ -186,8 +188,25 @@ export class AuthService {
 		if (!userDb) return new BadRequestException('error_auth_00020');
 
 		const code = nanoid(64);
+		//TODO: send email to user
+
 		userDb.password.code = code;
-		userDb.save();
+		userDb.password.expCode = moment().utc().add(1, 'd').toDate();
+
+		await userDb.save();
+
+		return;
+	}
+
+	async accuracyCodeResetPassword(param: AccuracyPasswordRequestDto) {
+		const userId = param.userId.trim();
+		const code = param.code.trim();
+
+		const userDb = await this.mongodbUserService.findOne({userId: userId});
+		if (!userDb) return new BadRequestException('error_auth_00021');
+
+		const isValid = userDb.password.code === code && userDb.password.expCode && userDb.password.expCode >= moment().utc().toDate();
+		if (!isValid) return new BadRequestException('error_auth_00021');
 
 		return;
 	}
@@ -202,7 +221,7 @@ export class AuthService {
 	private async deleteExpRefreshToken(user: User): Promise<void> {
 		await this.mongodbUserService.updateOne(
 			{userId: user.userId},
-			{$pull: {refreshTokens: {exp: {$lt: new Date().getTime() / 1000}}}}
+			{$pull: {refreshTokens: {exp: {$lt: moment().utc().toDate().getTime() / 1000}}}}
 		);
 	}
 

@@ -27,3 +27,11 @@ export class ResetPasswordRequestDto {
 	@IsNotEmpty({message: 'error_auth_00003'})
 	email: string;
 }
+
+export class AccuracyPasswordRequestDto {
+	@IsNotEmpty({message: 'error_auth_00021'})
+	userId: string;
+
+	@IsNotEmpty({message: 'error_auth_00021'})
+	code: string;
+}
