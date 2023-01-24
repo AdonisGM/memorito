@@ -36,6 +36,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
 			error_auth_00017: 'Active account fail',
 			error_auth_00018: 'User not exist',
 			error_auth_00019: 'User already active',
+			error_auth_00020: 'Request reset password fail'
 		};
 	}
 

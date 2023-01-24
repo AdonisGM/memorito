@@ -11,7 +11,7 @@ import {
 	CreatePasswordDto,
 	PasswordSigninDto,
 	PasswordSignupDto,
-	RenewTokenDto
+	RenewTokenDto, ResetPasswordRequestDto
 } from './dto';
 import {JwtService} from '@nestjs/jwt';
 import * as process from 'process';
@@ -41,7 +41,9 @@ export class AuthService {
 				userId: uuidv4(),
 				name: name.trim(),
 				email: email.toLowerCase(),
-				password: hashedPassword,
+				password: {
+					value: hashedPassword
+				},
 				active: {
 					code: nanoid(this.LENGTH_NANOID),
 				},
@@ -56,7 +58,6 @@ export class AuthService {
 		}
 
 
-
 		return;
 	}
 
@@ -66,9 +67,9 @@ export class AuthService {
 		});
 
 		if (!user) throw new BadRequestException('error_auth_00005');
-		if (!user.password) throw new BadRequestException('error_auth_00009');
+		if (!user.password.value) throw new BadRequestException('error_auth_00009');
 
-		const validPassword = await bcrypt.compare(dto.password.trim(), user.password);
+		const validPassword = await bcrypt.compare(dto.password.trim(), user.password.value);
 
 		if (!validPassword) throw new BadRequestException('error_auth_00005');
 		if (!user.active.status) throw new BadRequestException('error_auth_00006');
@@ -136,9 +137,9 @@ export class AuthService {
 
 		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
 		if (!userDb) throw new BadRequestException('error_auth_00016');
-		if (userDb.password) throw new BadRequestException('error_auth_00016');
+		if (userDb.password.value) throw new BadRequestException('error_auth_00016');
 
-		userDb.password = await this.hashPassword(newPassword);
+		userDb.password.value = await this.hashPassword(newPassword);
 		await userDb.save();
 
 		return;
@@ -152,12 +153,12 @@ export class AuthService {
 
 		const userDb = await this.mongodbUserService.findOne({userId: user.userId});
 		if (!userDb) throw new BadRequestException('error_auth_00013');
-		if (!userDb.password) throw new BadRequestException('error_auth_00014');
+		if (!userDb.password.value) throw new BadRequestException('error_auth_00014');
 
-		const isCorrectOldPassword = await bcrypt.compare(oldPassword, userDb.password);
+		const isCorrectOldPassword = await bcrypt.compare(oldPassword, userDb.password.value);
 		if (!isCorrectOldPassword) throw new BadRequestException('error_auth_00015');
 
-		userDb.password = await this.hashPassword(oldPassword);
+		userDb.password.value = await this.hashPassword(oldPassword);
 		await userDb.save();
 
 		return;
@@ -174,6 +175,19 @@ export class AuthService {
 
 		userDb.active.status = true;
 		await userDb.save();
+
+		return;
+	}
+
+	async requestResetPassword(dto: ResetPasswordRequestDto) {
+		const email = dto.email.trim();
+
+		const userDb = await this.mongodbUserService.findOne({email: email});
+		if (!userDb) return new BadRequestException('error_auth_00020');
+
+		const code = nanoid(64);
+		userDb.password.code = code;
+		userDb.save();
 
 		return;
 	}

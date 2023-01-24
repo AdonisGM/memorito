@@ -1,4 +1,4 @@
-import {IsNotEmpty, Matches} from 'class-validator';
+import {IsEmail, IsNotEmpty, Matches} from 'class-validator';
 
 export class ChangePasswordDto {
 	@IsNotEmpty({message: 'error_auth_00010'})
@@ -20,4 +20,10 @@ export class CreatePasswordDto {
 		message: 'error_auth_00002',
 	})
 	newPassword: string;
+}
+
+export class ResetPasswordRequestDto {
+	@IsEmail(undefined, {message: 'error_auth_00003'})
+	@IsNotEmpty({message: 'error_auth_00003'})
+	email: string;
 }

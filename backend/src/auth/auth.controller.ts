@@ -6,7 +6,8 @@ import {
 	PasswordSigninDto,
 	ChangePasswordDto,
 	CreatePasswordDto,
-	ActiveAccountDto
+	ActiveAccountDto,
+	ResetPasswordRequestDto
 } from './dto';
 import {JwtAuthGuard} from './jwt-auth.guard';
 import {MailjetService} from '../mailjet/mailjet.service';
@@ -36,7 +37,7 @@ export class AuthController {
 	@Post('create-password')
 	async createPassword(@Request() req: any, @Body() dto: CreatePasswordDto) {
 		await this.authService.checkActive(req.user);
-		return this.authService.createPassword(req.user, dto)
+		return this.authService.createPassword(req.user, dto);
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -44,17 +45,20 @@ export class AuthController {
 	@Post('change-password')
 	async changePassword(@Request() req: any, @Body() dto: ChangePasswordDto) {
 		await this.authService.checkActive(req.user);
-		return this.authService.changePassword(req.user, dto)
+		return this.authService.changePassword(req.user, dto);
 	}
 
 	@HttpCode(200)
 	@Post('active')
 	active(@Body() dto: ActiveAccountDto) {
-		return this.authService.activeAccount(dto)
+		return this.authService.activeAccount(dto);
 	}
 
-	@Get('reset-password')
-	resetPassword() {
-		return this.mailjetService.testSendEmail()
+	@HttpCode(200)
+	@Post('reset-password/request')
+	resetPassword(@Body() dto: ResetPasswordRequestDto) {
+		return this.authService.requestResetPassword(dto);
 	}
+
+
 }
