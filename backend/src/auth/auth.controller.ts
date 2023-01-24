@@ -1,4 +1,4 @@
-import {Body, Controller, Post, UseGuards, Request, HttpCode} from '@nestjs/common';
+import {Body, Controller, Post, UseGuards, Request, HttpCode, Get, Param} from '@nestjs/common';
 import {AuthService} from './auth.service';
 import {
 	PasswordSignupDto,
@@ -6,14 +6,16 @@ import {
 	PasswordSigninDto,
 	ChangePasswordDto,
 	CreatePasswordDto,
-	ActiveAccountDto
+	ActiveAccountDto,
+	ResetPasswordRequestDto, AccuracyPasswordRequestDto, ResetPasswordDto
 } from './dto';
 import {JwtAuthGuard} from './jwt-auth.guard';
-import {IJwtPayload} from './auth.interface';
+import {MailjetService} from '../mailjet/mailjet.service';
+import moment from 'moment';
 
 @Controller('auth')
 export class AuthController {
-	constructor(private authService: AuthService) {
+	constructor(private authService: AuthService, private mailjetService: MailjetService) {
 	}
 
 	@Post('signup-password')
@@ -36,7 +38,7 @@ export class AuthController {
 	@Post('create-password')
 	async createPassword(@Request() req: any, @Body() dto: CreatePasswordDto) {
 		await this.authService.checkActive(req.user);
-		return this.authService.createPassword(req.user, dto)
+		return this.authService.createPassword(req.user, dto);
 	}
 
 	@UseGuards(JwtAuthGuard)
@@ -44,12 +46,29 @@ export class AuthController {
 	@Post('change-password')
 	async changePassword(@Request() req: any, @Body() dto: ChangePasswordDto) {
 		await this.authService.checkActive(req.user);
-		return this.authService.changePassword(req.user, dto)
+		return this.authService.changePassword(req.user, dto);
 	}
 
 	@HttpCode(200)
 	@Post('active')
 	active(@Body() dto: ActiveAccountDto) {
-		return this.authService.activeAccount(dto)
+		return this.authService.activeAccount(dto);
+	}
+
+	@HttpCode(200)
+	@Post('reset-password/request')
+	requestResetPassword(@Body() dto: ResetPasswordRequestDto) {
+		return this.authService.requestResetPassword(dto);
+	}
+
+	@Get('reset-password/accuracy/:userId/:code')
+	accuracyCodeResetPassword(@Param() param: AccuracyPasswordRequestDto) {
+		return this.authService.accuracyCodeResetPassword(param);
+	}
+
+	@HttpCode(200)
+	@Post('reset-password')
+	resetPassword(@Body() dto: ResetPasswordDto) {
+		return this.authService.resetPassword(dto);
 	}
 }
