@@ -24,17 +24,18 @@ import moment from 'moment/moment';
 @Injectable()
 export class AuthService {
   private readonly SALT_ROUND = 15;
-  private readonly ONE_HOUR = '1h';
-  private readonly SEVEN_DAYS = '7d';
+  private readonly ONE_DAY = '1d';
+  private readonly TWO_WEAKS = '2w';
   private readonly LENGTH_NANOID = 64;
 
   constructor(
     @InjectModel(User.name) private mongodbUserService: Model<UserDocument>,
     private readonly jwtService: JwtService,
-  ) {}
+  ) {
+  }
 
   async signup(dto: PasswordSignupDto) {
-    const { name, email, password } = dto;
+    const {name, email, password} = dto;
 
     const hashedPassword = this.hashPassword(password.trim());
     const codeResetPassword = nanoid(this.LENGTH_NANOID);
@@ -93,7 +94,7 @@ export class AuthService {
 
     user.save();
 
-    return { accessToken, refreshToken };
+    return {accessToken, refreshToken};
   }
 
   async renewToken(dto: RenewTokenDto) {
@@ -135,7 +136,7 @@ export class AuthService {
 
     user.save();
 
-    return { accessToken, refreshToken };
+    return {accessToken, refreshToken};
   }
 
   async createPassword(user: IJwtPayload, dto: CreatePasswordDto) {
@@ -175,17 +176,23 @@ export class AuthService {
     if (!isCorrectOldPassword)
       throw new BadRequestException('error_auth_00015');
 
+    const accessToken = this.newAccessToken(userDb);
+    const refreshToken = this.newRefreshToken(userDb);
+
+    const newPayload = this.jwtService.decode(refreshToken) as IJwtPayload;
+
     userDb.password.value = await this.hashPassword(oldPassword);
+    userDb.refreshTokens = [{value: refreshToken, exp: newPayload.exp}];
     await userDb.save();
 
-    return;
+    return {accessToken, refreshToken};
   }
 
   async activeAccount(dto: ActiveAccountDto) {
     const userId = dto.userId;
     const code = dto.code.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ userId: userId });
+    const userDb = await this.mongodbUserService.findOne({userId: userId});
     if (!userDb) throw new BadRequestException('error_auth_00018');
     if (userDb.active.status) throw new BadRequestException('error_auth_00019');
     if (userDb.active.code !== code)
@@ -200,7 +207,7 @@ export class AuthService {
   async requestResetPassword(dto: ResetPasswordRequestDto) {
     const email = dto.email.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ email: email });
+    const userDb = await this.mongodbUserService.findOne({email: email});
     if (!userDb) return new BadRequestException('error_auth_00020');
 
     const code = nanoid(64);
@@ -218,7 +225,7 @@ export class AuthService {
     const userId = param.userId.trim();
     const code = param.code.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ userId: userId });
+    const userDb = await this.mongodbUserService.findOne({userId: userId});
     if (!userDb) return new BadRequestException('error_auth_00021');
 
     const isValid =
@@ -235,7 +242,7 @@ export class AuthService {
     const code = dto.code.trim();
     const password = dto.password.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ userId: userId });
+    const userDb = await this.mongodbUserService.findOne({userId: userId});
     if (!userDb) return new BadRequestException('error_auth_00022');
 
     const isValid =
@@ -249,6 +256,7 @@ export class AuthService {
       code: undefined,
       expCode: undefined,
     };
+    userDb.refreshTokens = []
     userDb.save();
 
     return;
@@ -266,11 +274,11 @@ export class AuthService {
 
   private async deleteExpRefreshToken(user: User): Promise<void> {
     await this.mongodbUserService.updateOne(
-      { userId: user.userId },
+      {userId: user.userId},
       {
         $pull: {
           refreshTokens: {
-            exp: { $lt: moment().utc().toDate().getTime() / 1000 },
+            exp: {$lt: moment().utc().toDate().getTime() / 1000},
           },
         },
       },
@@ -282,8 +290,8 @@ export class AuthService {
     refreshToken: string,
   ): Promise<void> {
     await this.mongodbUserService.updateOne(
-      { userId: user.userId },
-      { $pull: { refreshTokens: { value: refreshToken } } },
+      {userId: user.userId},
+      {$pull: {refreshTokens: {value: refreshToken}}},
     );
   }
 
@@ -293,7 +301,7 @@ export class AuthService {
         userId: user.userId,
       },
       {
-        expiresIn: this.ONE_HOUR,
+        expiresIn: this.ONE_DAY,
         secret: process.env.JWT_SECRET_KEY,
       },
     );
@@ -305,7 +313,7 @@ export class AuthService {
         userId: user.userId,
       },
       {
-        expiresIn: this.SEVEN_DAYS,
+        expiresIn: this.TWO_WEAKS,
         secret: process.env.JWT_SECRET_REFRESH_KEY,
       },
     );
