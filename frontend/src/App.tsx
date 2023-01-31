@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import './App.css'
+import { MantineProvider, Text } from '@mantine/core';
 
 function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <div className="App">
-
-    </div>
+    <MantineProvider withGlobalStyles withNormalizeCSS>
+      <Text>Welcome to Mantine!</Text>
+    </MantineProvider>
   )
 }
 
