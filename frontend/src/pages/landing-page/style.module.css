@@ -1,0 +1,27 @@
+.main {
+    --height-header: 62px;
+    --height-session: calc(100vh - var(--height-header));
+
+    height: 100vh;
+
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    scroll-padding-top: var(--height-header);
+}
+
+.home {
+}
+
+.feature {
+}
+
+.plan {
+}
+
+.contact {
+}
+
+.home, .feature, .plan, .contact {
+    height: var(--height-session);
+    scroll-snap-align: start;
+}
