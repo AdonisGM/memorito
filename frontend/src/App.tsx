@@ -1,15 +1,8 @@
-import { useState } from 'react'
 import './App.css'
-import { MantineProvider, Text } from '@mantine/core';
+import RoutesConfig from './pages/routes-config';
 
 function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <MantineProvider withGlobalStyles withNormalizeCSS>
-      <Text>Welcome to Mantine!</Text>
-    </MantineProvider>
-  )
+  return <RoutesConfig/>
 }
 
 export default App
