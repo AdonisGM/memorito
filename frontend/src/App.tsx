@@ -1,14 +1,12 @@
-import { useState } from 'react'
 import './App.css'
-import { MantineProvider, Text } from '@mantine/core';
+import { Route, Routes } from 'react-router-dom';
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <MantineProvider withGlobalStyles withNormalizeCSS>
-      <Text>Welcome to Mantine!</Text>
-    </MantineProvider>
+    <Routes>
+      <Route path={'/'} element={<p>123123</p>}/>
+      <Route path={'/123'} element={<p>asdasd</p>}/>
+    </Routes>
   )
 }
 
