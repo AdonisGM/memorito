@@ -85,6 +85,10 @@ const links: ILink[] = [
     link: '#contact',
     label: 'Contact'
   },
+  {
+    link: '#faqs',
+    label: 'FAQs'
+  },
 ];
 
 const MeHeader = () => {
