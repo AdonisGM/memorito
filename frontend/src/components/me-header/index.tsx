@@ -105,7 +105,7 @@ const MeHeader = () => {
     </a>
   ));
 
-  return <Header height={62} style={{position: 'sticky'}}>
+  return <Header height={62}>
     <Container className={classes.inner} size={'xl'}>
       <Burger opened={opened} onClick={toggle} size="sm" className={classes.burger}/>
       <Group className={classes.links} spacing={5} w={400}>

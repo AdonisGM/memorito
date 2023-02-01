@@ -1,27 +1,37 @@
 .main {
     --height-header: 62px;
-    --height-session: calc(100vh - var(--height-header));
 
-    height: 100vh;
+    position: relative;
+}
 
-    overflow-y: auto;
-    scroll-snap-type: y mandatory;
-    scroll-padding-top: var(--height-header);
+.header {
+    position: sticky;
+    width: 100%;
+
+    top: 0;
+    z-index: 9999;
 }
 
 .home {
+    padding: 80px 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.titleHome {
+    text-align: center;
 }
 
 .feature {
+    padding: var(--height-header) 0;
 }
 
 .plan {
+    padding: var(--height-header) 0;
 }
 
 .contact {
-}
-
-.home, .feature, .plan, .contact {
-    height: var(--height-session);
-    scroll-snap-align: start;
+    padding: var(--height-header) 0;
 }
