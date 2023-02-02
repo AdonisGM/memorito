@@ -24,7 +24,16 @@
 }
 
 .titleHome {
-    text-align: center;
+    text-align: right;
+}
+
+.homeContainer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+
+    width: 100%;
 }
 
 .feature {
