@@ -3,8 +3,15 @@ import MeHeader from '../../components/me-header';
 import MeFooter from '../../components/me-footer';
 import { Title, Text, Image, Space, Button, Container, Center } from '@mantine/core';
 import HomeImage from '../../asset/image/happy-student-amico.svg';
+import { useNavigate } from 'react-router-dom';
 
 const LandingPage = () => {
+  const navigate = useNavigate()
+
+  const handlerSignUpClick = () => {
+    navigate('/sign-up')
+  }
+
   return (
     <div className={classes.main}>
       <div className={classes.header}><MeHeader/></div>
@@ -17,7 +24,7 @@ const LandingPage = () => {
               plans and all
               people. The solution for paid version of Quizlet.</Text>
             <Space h={'xl'}/>
-            <Button color="green" radius="md">
+            <Button color="green" radius="md" onClick={handlerSignUpClick}>
               Try now!
             </Button>
           </div>
