@@ -5,8 +5,10 @@ interface LocalManageValue {
   }
 }
 
-export const LocalManage = (): LocalManageValue => {
-  const ENDPOINT_KEY = 'endpoint'
+export const useLocalStorage = (): LocalManageValue => {
+  const ENDPOINT_KEY = 'ep'
+  const ACCESS_TOKEN = 'at'
+  const REFRESH_TOKEN = 'rt'
 
   const readEndpoint = () => {
     return localStorage.getItem(ENDPOINT_KEY);

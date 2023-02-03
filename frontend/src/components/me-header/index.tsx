@@ -135,10 +135,10 @@ const MeHeader = () => {
       <img src={MemoritoLogo} height={22} alt=""/>
 
       <Group spacing={5} className={classes.social} position="right" noWrap w={400}>
-        <Button variant="filled" radius="md" size="xs">
+        <Button variant="filled" radius="md" size="xs" onClick={handlerSignUpClick}>
           Sign up
         </Button>
-        <Button variant="subtle" radius="md" size="xs">
+        <Button variant="subtle" radius="md" size="xs" onClick={handlerSignInClick}>
           Sign in
         </Button>
       </Group>

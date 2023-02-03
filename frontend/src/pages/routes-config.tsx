@@ -3,6 +3,7 @@ import SignIn from './sign-in';
 import LandingPage from './landing-page';
 import { createBrowserRouter, RouterProvider, useRouteError } from 'react-router-dom';
 import ErrorBoundary from './error';
+import DevelopSetting from './develop-setting';
 
 const router = createBrowserRouter([
   {
@@ -17,6 +18,10 @@ const router = createBrowserRouter([
   {
     path: '/sign-up',
     element: <SignUp/>,
+  },
+  {
+    path: '/develop/setting',
+    element: <DevelopSetting/>,
   }
 ]);
 
