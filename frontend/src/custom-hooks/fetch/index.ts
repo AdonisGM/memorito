@@ -3,14 +3,14 @@ import { useLocalStorage } from '../local-manage';
 import { useEffect, useState } from 'react';
 import useApis from '../api';
 
-enum StatusEnum {
+export enum StatusEnum {
   IDLE,
   FETCHING,
   SUCCESS,
   FAIL,
 }
 
-const useFetch = (name: string) => {
+const useFetch = (name: string): [((dataRequest: { body?: any; params?: { [p: string]: string } }) => Promise<void>), any, StatusEnum] => {
   const [data, setData] = useState<any>(undefined);
   const [status, setStatus] = useState<StatusEnum>(StatusEnum.IDLE);
 
@@ -29,13 +29,12 @@ const useFetch = (name: string) => {
   };
 
   const execute = async (dataRequest: {
-    body?: BodyInit;
+    body?: any;
     params?: {
       [name: string]: string
     };
   }) => {
-    const api = apis.get(name);
-    if (!api) return;
+    const api = apis.get(name)!;
 
     setStatus(StatusEnum.FETCHING);
     try {
@@ -52,7 +51,8 @@ const useFetch = (name: string) => {
 
       setData(response.data);
       setStatus(StatusEnum.SUCCESS);
-    } catch (e) {
+    } catch (e: any) {
+      setData(e.response.data);
       setStatus(StatusEnum.FAIL);
     }
   };
