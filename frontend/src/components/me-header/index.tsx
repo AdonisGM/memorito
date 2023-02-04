@@ -2,6 +2,7 @@ import { Burger, Button, Container, createStyles, Group, Header } from '@mantine
 import MemoritoLogo from '../../asset/image/logo-no-background.svg';
 import { useDisclosure } from '@mantine/hooks';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = createStyles((theme) => ({
   inner: {
@@ -96,6 +97,16 @@ const MeHeader = () => {
   const [active, setActive] = useState(links[0].link);
   const {classes, cx} = useStyles();
 
+  const navigate = useNavigate()
+
+  const handlerSignInClick = () => {
+    navigate('/sign-in')
+  }
+
+  const handlerSignUpClick = () => {
+    navigate('/sign-up')
+  }
+
   const items = links.map((link) => (
     <a
       key={link.label}
@@ -124,10 +135,10 @@ const MeHeader = () => {
       <img src={MemoritoLogo} height={22} alt=""/>
 
       <Group spacing={5} className={classes.social} position="right" noWrap w={400}>
-        <Button variant="filled" radius="md" size="xs">
+        <Button variant="filled" radius="md" size="xs" onClick={handlerSignUpClick}>
           Sign up
         </Button>
-        <Button variant="subtle" radius="md" size="xs">
+        <Button variant="subtle" radius="md" size="xs" onClick={handlerSignInClick}>
           Sign in
         </Button>
       </Group>
