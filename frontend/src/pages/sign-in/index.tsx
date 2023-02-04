@@ -1,28 +1,26 @@
-import {
-  TextInput,
-  PasswordInput,
-  Anchor,
-  Paper,
-  Title,
-  Text,
-  Group,
-  Button,
-  Center,
-} from '@mantine/core';
+import { Alert, Anchor, Button, Center, Group, Paper, PasswordInput, Text, TextInput, Title } from '@mantine/core';
 import LayoutAuth from '../../components/layout-auth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { IconArrowNarrowLeft } from '@tabler/icons-react';
 import { isEmail, useForm } from '@mantine/form';
 import validator from 'validator';
-import useFetch from '../../custom-hooks/fetch';
+import useFetch, { StatusEnum } from '../../custom-hooks/fetch';
+import { useEffect, useState } from 'react';
+import useErrorApis from '../../custom-hooks/errorApis';
+import { useLocalStorage } from '../../custom-hooks/local-manage';
 
 const SignIn = () => {
   const [execute, data, status] = useFetch('sign_in_password');
+  const [error, setError] = useState<string | undefined>(undefined);
+
+  const errorApis = useErrorApis()
+  const local = useLocalStorage()
+  const navigate = useNavigate()
 
   const form = useForm({
     initialValues: {
       email: '',
-      password: ''
+      password: '',
     },
     validate: {
       email: isEmail('Email not valid'),
@@ -32,15 +30,36 @@ const SignIn = () => {
 
   const handleSubmitForm = form.onSubmit((values) => {
     execute({
-      body: values
-    })
+      body: values,
+    });
   });
+
+  useEffect(() => {
+    console.log(status);
+    switch (status) {
+      case StatusEnum.IDLE:
+      case StatusEnum.FETCHING:
+        setError(undefined)
+        break;
+      case StatusEnum.SUCCESS:
+        local.accessToken.write(data?.accessToken)
+        local.refreshToken.write(data?.refreshToken)
+        navigate('/auth')
+        break;
+      case StatusEnum.FAIL:
+        setError(errorApis.get(data.message.code))
+        break;
+      default:
+        setError('Login fail');
+        break;
+    }
+  }, [status]);
 
   return (
     <LayoutAuth>
       <Title
         align="center"
-        sx={() => ({fontWeight: 900})}
+        sx={() => ({ fontWeight: 900 })}
         pt={40}
       >
         Welcome back!
@@ -53,10 +72,16 @@ const SignIn = () => {
       </Text>
 
       <Paper withBorder shadow="md" p={30} mt={30} radius="md">
+        {error &&
+            <Alert color="orange.5" mb={'lg'} variant={'filled'}>
+              {error}
+            </Alert>
+        }
         <form onSubmit={handleSubmitForm}>
           <TextInput
             label="Email"
             placeholder="you@example.dev"
+            description={'If you learning in FPT University, let use that.'}
             withAsterisk
             {...form.getInputProps('email')}
           />
@@ -80,7 +105,7 @@ const SignIn = () => {
                 <Text>Back to home</Text>
               </Center>
             </Anchor>
-            <Button type={'submit'}>
+            <Button type={'submit'} loading={status == StatusEnum.FETCHING}>
               Sign in
             </Button>
           </Group>

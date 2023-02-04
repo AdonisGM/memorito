@@ -4,6 +4,7 @@ import LandingPage from './landing-page';
 import { createBrowserRouter, RouterProvider, useRouteError } from 'react-router-dom';
 import ErrorBoundary from './error';
 import DevelopSetting from './develop-setting';
+import TestAuth from './test-auth';
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
   {
     path: '/develop/setting',
     element: <DevelopSetting/>,
+  },
+  {
+    path: '/auth',
+    element: <TestAuth/>,
   }
 ]);
 

@@ -3,3 +3,11 @@
     height: 100vh;
     width: 100vw;
 }
+
+.alert {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+
+    width: 300px;
+}
