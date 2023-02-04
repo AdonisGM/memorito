@@ -11,6 +11,9 @@ export class Active extends Document {
 
   @Prop({ required: true })
   code: string;
+
+  @Prop({ required: true })
+  exp: Date;
 }
 
 export const ActiveSchema = SchemaFactory.createForClass(Active);
