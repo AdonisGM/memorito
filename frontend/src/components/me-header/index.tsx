@@ -2,6 +2,7 @@ import { Burger, Button, Container, createStyles, Group, Header } from '@mantine
 import MemoritoLogo from '../../asset/image/logo-no-background.svg';
 import { useDisclosure } from '@mantine/hooks';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const useStyles = createStyles((theme) => ({
   inner: {
@@ -57,8 +58,8 @@ const useStyles = createStyles((theme) => ({
 
   linkActive: {
     '&, &:hover': {
-      backgroundColor: theme.colors.green[0],
-      color: theme.colors.green[6]
+      backgroundColor: theme.fn.variant({variant: 'light', color: theme.primaryColor}).background,
+      color: theme.fn.variant({variant: 'light', color: theme.primaryColor}).color,
     },
   },
 }));
@@ -96,6 +97,16 @@ const MeHeader = () => {
   const [active, setActive] = useState(links[0].link);
   const {classes, cx} = useStyles();
 
+  const navigate = useNavigate()
+
+  const handlerSignInClick = () => {
+    navigate('/sign-in')
+  }
+
+  const handlerSignUpClick = () => {
+    navigate('/sign-up')
+  }
+
   const items = links.map((link) => (
     <a
       key={link.label}
@@ -109,7 +120,12 @@ const MeHeader = () => {
     </a>
   ));
 
-  return <Header height={62}>
+  return <Header height={62} style={{
+    position: 'sticky',
+    zIndex: 9999,
+    backdropFilter: 'blur(10px)',
+    backgroundColor: 'rgba(255,255,255,0.88)'
+  }}>
     <Container className={classes.inner} size={'xl'}>
       <Burger opened={opened} onClick={toggle} size="sm" className={classes.burger}/>
       <Group className={classes.links} spacing={5} w={400}>
@@ -119,10 +135,10 @@ const MeHeader = () => {
       <img src={MemoritoLogo} height={22} alt=""/>
 
       <Group spacing={5} className={classes.social} position="right" noWrap w={400}>
-        <Button variant="filled" color="green" radius="md" size="xs">
+        <Button variant="filled" radius="md" size="xs" onClick={handlerSignUpClick}>
           Sign up
         </Button>
-        <Button variant="subtle" color="green" radius="md" size="xs">
+        <Button variant="subtle" radius="md" size="xs" onClick={handlerSignInClick}>
           Sign in
         </Button>
       </Group>
@@ -130,4 +146,4 @@ const MeHeader = () => {
   </Header>;
 };
 
-export default MeHeader
+export default MeHeader;
