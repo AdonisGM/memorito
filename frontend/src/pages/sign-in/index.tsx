@@ -44,7 +44,7 @@ const SignIn = () => {
       case StatusEnum.SUCCESS:
         local.accessToken.write(data?.accessToken)
         local.refreshToken.write(data?.refreshToken)
-        navigate('/auth')
+        navigate('/app')
         break;
       case StatusEnum.FAIL:
         setError(errorApis.get(data.message.code))

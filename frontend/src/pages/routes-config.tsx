@@ -1,10 +1,10 @@
 import SignUp from './sign-up';
 import SignIn from './sign-in';
 import LandingPage from './landing-page';
-import { createBrowserRouter, RouterProvider, useRouteError } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ErrorBoundary from './error';
 import DevelopSetting from './develop-setting';
-import TestAuth from './test-auth';
+import LayoutApp from './layout-app';
 
 const router = createBrowserRouter([
   {
@@ -25,8 +25,9 @@ const router = createBrowserRouter([
     element: <DevelopSetting/>,
   },
   {
-    path: '/auth',
-    element: <TestAuth/>,
+    path: '/app',
+    element: <LayoutApp/>,
+
   }
 ]);
 
