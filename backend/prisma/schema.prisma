@@ -1,0 +1,43 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Define the `User` table in the database
+model User {
+  userId                String    @id @default(uuid()) @db.VarChar(50)
+  name                  String    @db.VarChar(255)
+  email                 String    @unique() @db.VarChar(255)
+  password              String    @db.VarChar(255)
+  forgotPasswordCode    String?   @db.VarChar(255)
+  forgotPasswordCodeExp DateTime?
+  resetPasswordCode     String?   @db.VarChar(255)
+  resetPasswordCodeExp  DateTime?
+  active                Boolean   @default(false)
+  activeCode            String?   @db.VarChar(255)
+  activeCodeExp         DateTime?
+  avatar                String?   @db.VarChar(500)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // references
+  refreshTokens RefreshToken[]
+}
+
+// set name of the table in the database to `refresh_tokens`
+model RefreshToken {
+  refreshTokenId String   @id @default(uuid())
+  token          String   @unique @db.VarChar(200)
+  expires        DateTime
+  userId         String   @db.VarChar(50)
+
+  // references
+  user User @relation(fields: [userId], references: [userId])
+}

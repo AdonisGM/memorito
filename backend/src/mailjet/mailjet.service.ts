@@ -1,9 +1,13 @@
 import { Injectable } from '@nestjs/common';
 import Mailjet from 'node-mailjet';
+import {ISendVerifyAccount} from "./mailjet.interface";
 
 @Injectable()
 export class MailjetService {
   private mailjet: Mailjet;
+  private readonly VERIFY_ACCOUNT_TEMPLATE_ID = 4523730;
+  private readonly EMAIL_SENDER = 'admin@nmtung.dev';
+  private readonly NAME_SENDER = 'Admin from Memorito';
 
   constructor() {
     this.mailjet = new Mailjet({
@@ -12,8 +16,8 @@ export class MailjetService {
     });
   }
 
-  async testSendEmail() {
-    const temp = await this.mailjet
+  sendVerifyAccount(dto:ISendVerifyAccount) {
+    this.mailjet
       .post('send', {
         version: 'v3.1',
       })
@@ -21,25 +25,24 @@ export class MailjetService {
         Messages: [
           {
             From: {
-              Email: 'admin@nmtung.dev',
-              Name: 'Admin from Memorito',
+              Email: this.EMAIL_SENDER,
+              Name: this.NAME_SENDER
             },
             To: [
               {
-                Email: 'nmtungofficial@gmail.com',
-                Name: 'Nguyen Manh Tung',
+                Email: dto.email,
+                Name: dto.name,
               },
             ],
-            TemplateID: 4523730,
+            TemplateID: this.VERIFY_ACCOUNT_TEMPLATE_ID,
             TemplateLanguage: true,
             Subject: 'Memorito | Verify your account',
             Variables: {
-              name: 'Nguyen Manh Tung',
-              url: 'https://www.nmtung.dev/',
+              name: dto.name,
+              url: `https://memorito.nmtung.dev/verify-account/${dto.userId}/${dto.code}`
             },
           },
         ],
-      });
-    console.log(temp);
+      }).then().catch();
   }
 }

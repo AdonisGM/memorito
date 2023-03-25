@@ -28,7 +28,6 @@ import moment from 'moment';
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private mailjetService: MailjetService,
   ) {}
 
   @Post('signup-password')
