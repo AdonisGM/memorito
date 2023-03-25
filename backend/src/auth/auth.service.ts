@@ -305,9 +305,9 @@ export class AuthService {
     return;
   }
 
-  async accuracyCodeResetPassword(param: AccuracyPasswordRequestDto) {
-    const userId = param.userId.trim();
-    const code = param.code.trim();
+  async accuracyCodeResetPassword(dto: AccuracyPasswordRequestDto) {
+    const userId = dto.userId.trim();
+    const code = dto.code.trim();
 
     const userDb = await this.prisma.user.findFirst({
       where: {

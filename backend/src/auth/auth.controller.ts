@@ -73,9 +73,10 @@ export class AuthController {
     return this.authService.requestResetPassword(dto);
   }
 
-  @Get('reset-password/accuracy/:userId/:code')
-  accuracyCodeResetPassword(@Param() param: AccuracyPasswordRequestDto) {
-    return this.authService.accuracyCodeResetPassword(param);
+  @HttpCode(200)
+  @Post('reset-password/accuracy')
+  accuracyCodeResetPassword(@Body() dto: AccuracyPasswordRequestDto) {
+    return this.authService.accuracyCodeResetPassword(dto);
   }
 
   @HttpCode(200)
