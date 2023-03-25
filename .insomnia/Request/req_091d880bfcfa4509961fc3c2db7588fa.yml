@@ -1,0 +1,29 @@
+_id: req_091d880bfcfa4509961fc3c2db7588fa
+type: Request
+parentId: fld_50c5e0c063784e54bae32c24978f0243
+modified: 1679747261420
+created: 1679744050888
+url: "{{ _.endpoint }}/api/auth/active"
+name: Active account
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"userId": "1e8d95ee-1794-4d08-b1b1-b3fdeb9c0b08",
+    	"code": "T36aA6BQcwtqTGqVoxjVyTaJPxH6c_DxQuYn0S9Pb7_M4F0IWorTkYBDV8JkWjDw"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+authentication: {}
+metaSortKey: -1679744050888
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

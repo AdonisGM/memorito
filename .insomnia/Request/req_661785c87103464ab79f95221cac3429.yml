@@ -1,0 +1,30 @@
+_id: req_661785c87103464ab79f95221cac3429
+type: Request
+parentId: fld_50c5e0c063784e54bae32c24978f0243
+modified: 1678637360872
+created: 1678635792558
+url: "{{ _.endpoint }}/api/auth/signup-password"
+name: Sign up
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"email": "nmtung.study@gmail.com",
+    	"password": "Tung88644264",
+    	"name": "Nguyễn Mạnh Tùng"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+authentication: {}
+metaSortKey: -1678637135414
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

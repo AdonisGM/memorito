@@ -1,0 +1,30 @@
+_id: req_36fd1a7a3ec949c48c74262246c28a01
+type: Request
+parentId: fld_f9847d87fb0841268819e2d26bead5e6
+modified: 1679756915748
+created: 1679756828087
+url: "{{ _.endpoint }}/api/auth/reset-password/accuracy"
+name: Reset password
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"userId": "",
+    	"code": "",
+    	"password": ""
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+authentication: {}
+metaSortKey: -1678637135064
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

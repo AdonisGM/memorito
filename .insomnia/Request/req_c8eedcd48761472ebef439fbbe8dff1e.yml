@@ -1,0 +1,33 @@
+_id: req_c8eedcd48761472ebef439fbbe8dff1e
+type: Request
+parentId: fld_c1d471fbbf8743ba82f76d695cd297c8
+modified: 1679756877369
+created: 1679755162655
+url: "{{ _.endpoint }}/api/auth/change-password"
+name: Change password
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"oldPassword": "",
+    	"newPassword": ""
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+authentication:
+  type: bearer
+  disabled: false
+  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxZThkOTVlZS0xNzk0LTRkMDgtYjFiMS1iM2ZkZWI5YzBiMDgiLCJpYXQiOjE2Nzk3NTU1NjUsImV4cCI6MTY3OTg0MTk2NX0.mcJiRWwN9kzuan47fvRGNoNC9hltVHyv-ay58n5lK6Q
+  prefix: ""
+metaSortKey: -1679753658459.25
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global

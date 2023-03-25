@@ -1,0 +1,29 @@
+_id: req_f13318b8abf043dbba2ee8202ab1e745
+type: Request
+parentId: fld_50c5e0c063784e54bae32c24978f0243
+modified: 1679724300880
+created: 1679723427280
+url: "{{ _.endpoint }}/api/auth/signin-password"
+name: Sign in
+description: ""
+method: POST
+body:
+  mimeType: application/json
+  text: |-
+    {
+    	"email": "nmtung.study@gmail.com",
+    	"password": "Tung88644264"
+    }
+parameters: []
+headers:
+  - name: Content-Type
+    value: application/json
+authentication: {}
+metaSortKey: -1678637135364
+isPrivate: false
+settingStoreCookies: true
+settingSendCookies: true
+settingDisableRenderRequestBody: false
+settingEncodeUrl: true
+settingRebuildPath: true
+settingFollowRedirects: global
