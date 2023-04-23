@@ -40,6 +40,15 @@ export class HttpExceptionFilter implements ExceptionFilter {
       error_auth_00020: 'Yêu cầu reset mật khẩu thất bại',
       error_auth_00021: 'Xác thực reset mật khẩu thất bại',
       error_auth_00022: 'Reset mật khẩu thất bại',
+      error_auth_00023: 'Tên quyền không hợp lệ',
+      error_auth_00024: 'Mã của quyền không hợp lệ',
+      error_auth_00025: 'Quyền không hợp lệ hoặc không tồn tại',
+      error_auth_00026: 'Mã hoặc tên quyền đã tồn tại',
+      error_auth_00027: 'Tên chức danh không hợp lệ',
+      error_auth_00028: 'Giá trị chức danh không hợp lệ',
+      error_auth_00029: 'Mô tả chức danh không hợp lệ',
+      error_auth_00030: 'Giá trị hoặc tên chức danh đã tồn tại',
+      error_auth_00031: 'Chức danh không hợp lệ hoặc không tồn tại',
     };
   }
 

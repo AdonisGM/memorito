@@ -1,49 +1,21 @@
-import { Navbar, Group, Code, ScrollArea, createStyles, Image } from '@mantine/core';
-import {
-  IconNotes,
-  IconCalendarStats,
-  IconGauge,
-  IconPresentationAnalytics,
-  IconFileAnalytics,
-  IconAdjustments,
-  IconLock,
-} from '@tabler/icons';
-import { LinksGroup } from './nav-link-group';
-import UserButton from './user-button';
+import {Code, createStyles, Group, Image, Navbar, ScrollArea, Skeleton} from '@mantine/core';
+import {LinksGroup} from './nav-link-group';
 import Logo from '../../asset/image/logo-no-background.svg';
+import useFetch, {StatusEnum} from "../../custom-hooks/fetch";
+import {useEffect} from "react";
+import UserButton from "./user-button";
+import {IconSettings, IconGauge} from "@tabler/icons-react";
+import LayoutHeaderPage from "../../components/layout-header-page";
+import {Link} from "react-router-dom";
 
-const mockdata = [
-  { label: 'Dashboard', icon: IconGauge },
+const mockData = [
+  {label: 'Dashboard', icon: IconGauge},
   {
-    label: 'Market news',
-    icon: IconNotes,
-    initiallyOpened: true,
+    label: 'System',
+    icon: IconSettings,
     links: [
-      { label: 'Overview', link: '/' },
-      { label: 'Forecasts', link: '/' },
-      { label: 'Outlook', link: '/' },
-      { label: 'Real time', link: '/' },
-    ],
-  },
-  {
-    label: 'Releases',
-    icon: IconCalendarStats,
-    links: [
-      { label: 'Upcoming releases', link: '/' },
-      { label: 'Previous releases', link: '/' },
-      { label: 'Releases schedule', link: '/' },
-    ],
-  },
-  { label: 'Analytics', icon: IconPresentationAnalytics },
-  { label: 'Contracts', icon: IconFileAnalytics },
-  { label: 'Settings', icon: IconAdjustments },
-  {
-    label: 'Security',
-    icon: IconLock,
-    links: [
-      { label: 'Enable 2FA', link: '/' },
-      { label: 'Change password', link: '/' },
-      { label: 'Recovery codes', link: '/' },
+      {label: 'Permission', link: '/app/system/permission'},
+      {label: 'Role', link: '/app/system/role'},
     ],
   },
 ];
@@ -82,33 +54,68 @@ const useStyles = createStyles((theme) => ({
       theme.colorScheme === 'dark' ? theme.colors.dark[4] : theme.colors.gray[3]
     }`,
   },
+
+  footerSkeleton: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    columnGap: theme.spacing.md,
+    margin: '14px 20px',
+  },
+
+  layout: {
+    display: 'flex',
+    columnGap: '10px',
+  }
 }));
 
 const LayoutApp = () => {
-  const { classes } = useStyles();
-  const links = mockdata.map((item) => <LinksGroup {...item} key={item.label} />);
+  const {classes} = useStyles();
+  const links = mockData.map((item) => <LinksGroup {...item} key={item.label}/>);
+  const [execute, user, status] = useFetch('user_info');
+
+  useEffect(() => {
+    execute({});
+  }, [])
 
   return (
-    <Navbar height={'100vh'} width={{ sm: 300 }} pt="md" pl="md" pr="md" className={classes.navbar}>
-      <Navbar.Section className={classes.header}>
-        <Group position="apart">
-          <Image src={Logo} width={130} fit={'contain'}/>
-          <Code sx={{ fontWeight: 700 }}>v0.1.0-beta</Code>
-        </Group>
-      </Navbar.Section>
+    <div className={classes.layout}>
+      <Navbar height={'100vh'} width={{sm: 300}} pt="md" pl="md" pr="md" className={classes.navbar}>
+        <Navbar.Section className={classes.header}>
+          <Group position="apart">
+            <Image src={Logo} width={130} fit={'contain'}/>
+            <Code sx={{fontWeight: 700}}>v0.1.0-beta</Code>
+          </Group>
+        </Navbar.Section>
 
-      <Navbar.Section grow className={classes.links} component={ScrollArea}>
-        <div className={classes.linksInner}>{links}</div>
-      </Navbar.Section>
+        <Navbar.Section grow className={classes.links} component={ScrollArea}>
+          <div className={classes.linksInner}>{links}</div>
+        </Navbar.Section>
 
-      <Navbar.Section className={classes.footer}>
-        <UserButton
-          image="https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?ixid=MXwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHw%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=255&q=80"
-          name="Ann Nullpointer"
-          email="anullpointer@yahoo.com"
-        />
-      </Navbar.Section>
-    </Navbar>
+        <Navbar.Section className={classes.footer}>
+          {status !== StatusEnum.SUCCESS &&
+              <div className={classes.footerSkeleton}>
+                  <div>
+                      <Skeleton height={50} circle/>
+                  </div>
+                  <div style={{width: '100%'}}>
+                      <Skeleton height={8} radius="xl"/>
+                      <Skeleton height={8} mt={6} radius="xl"/>
+                      <Skeleton height={8} mt={6} radius="xl"/>
+                  </div>
+              </div>
+          }
+          {status === StatusEnum.SUCCESS &&
+              <UserButton
+                  image={user.avatar}
+                  name={user.name}
+                  email={user.email}
+              />
+          }
+        </Navbar.Section>
+      </Navbar>
+      <LayoutHeaderPage/>
+    </div>
   );
 }
 

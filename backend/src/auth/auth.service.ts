@@ -1,5 +1,4 @@
 import {BadRequestException, Injectable} from '@nestjs/common';
-import {v4 as uuidv4} from 'uuid';
 import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
 import {
@@ -48,7 +47,7 @@ export class AuthService {
       activeCode: activeCode,
       activeCodeExp: moment().utc().add(1, 'd').toDate(),
       createdAt: moment().utc().toDate(),
-      updatedAt: moment().utc().toDate(),
+      updatedAt: moment().utc().toDate()
     };
 
     let resultData = undefined;
@@ -113,7 +112,28 @@ export class AuthService {
       data: data
     })
 
-    return {accessToken, refreshToken};
+    const role = await this.prisma.user.findFirst({
+      where: {
+        userId: user.userId,
+      },
+      select: {
+        isAdmin: true,
+        role: {
+          select: {
+            name: true,
+            value: true,
+            permissions: {
+              select: {
+                name: true,
+                value: true
+              }
+            }
+          }
+        }
+      }
+    });
+
+    return {accessToken, refreshToken, ...role};
   }
 
   async renewToken(dto: RenewTokenDto) {
@@ -278,7 +298,6 @@ export class AuthService {
     return;
   }
 
-
   async requestResetPassword(dto: ResetPasswordRequestDto) {
     const email = dto.email.trim();
 
@@ -290,7 +309,6 @@ export class AuthService {
     if (!userDb) return new BadRequestException('error_auth_00020');
 
     const code = nanoid(64);
-    //TODO: send email to user
 
     await this.prisma.user.update({
       where: {

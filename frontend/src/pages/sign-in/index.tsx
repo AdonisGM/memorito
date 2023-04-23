@@ -35,7 +35,6 @@ const SignIn = () => {
   });
 
   useEffect(() => {
-    console.log(status);
     switch (status) {
       case StatusEnum.IDLE:
       case StatusEnum.FETCHING:
@@ -44,6 +43,9 @@ const SignIn = () => {
       case StatusEnum.SUCCESS:
         local.accessToken.write(data?.accessToken)
         local.refreshToken.write(data?.refreshToken)
+        local.role.write(data?.role.value)
+        local.permission.write(data?.role.permissions.map((item: any) => item.value))
+        local.admin.write(data?.isAdmin)
         navigate('/app')
         break;
       case StatusEnum.FAIL:

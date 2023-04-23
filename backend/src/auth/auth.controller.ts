@@ -5,8 +5,6 @@ import {
   UseGuards,
   Request,
   HttpCode,
-  Get,
-  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -21,8 +19,6 @@ import {
   ResetPasswordDto,
 } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { MailjetService } from '../mailjet/mailjet.service';
-import moment from 'moment';
 
 @Controller('auth')
 export class AuthController {

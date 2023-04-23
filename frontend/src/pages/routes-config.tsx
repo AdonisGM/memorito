@@ -5,6 +5,9 @@ import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import ErrorBoundary from './error';
 import DevelopSetting from './develop-setting';
 import LayoutApp from './layout-app';
+import ProtectRouter from "../custom-routers/protect-router";
+import PermissionPage from "./system/permission";
+import RolePage from "./system/role";
 
 const router = createBrowserRouter([
   {
@@ -26,8 +29,17 @@ const router = createBrowserRouter([
   },
   {
     path: '/app',
-    element: <LayoutApp/>,
-
+    element: <ProtectRouter><LayoutApp/></ProtectRouter>,
+    children: [
+      {
+        path: '/app/system/permission',
+        element: <PermissionPage/>
+      },
+      {
+        path: '/app/system/role',
+        element: <RolePage/>
+      }
+    ]
   }
 ]);
 
