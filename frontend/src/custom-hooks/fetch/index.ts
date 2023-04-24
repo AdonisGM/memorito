@@ -38,6 +38,7 @@ const useFetch = (name: string): [((dataRequest: { body?: any; params?: { [p: st
 
     setStatus(StatusEnum.FETCHING);
     try {
+      // add token
       const response = await axios(api.url, {
         params: dataRequest?.params,
         data: dataRequest?.body,
@@ -45,6 +46,7 @@ const useFetch = (name: string): [((dataRequest: { body?: any; params?: { [p: st
         method: api.method,
         headers: {
           'Content-Type': api.contextType,
+          'Authorization': `Bearer ${local.accessToken.read()}`,
         },
         timeout: 5000,
       });

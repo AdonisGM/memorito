@@ -5,8 +5,6 @@ import {
   UseGuards,
   Request,
   HttpCode,
-  Get,
-  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import {
@@ -21,14 +19,11 @@ import {
   ResetPasswordDto,
 } from './dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
-import { MailjetService } from '../mailjet/mailjet.service';
-import moment from 'moment';
 
 @Controller('auth')
 export class AuthController {
   constructor(
     private authService: AuthService,
-    private mailjetService: MailjetService,
   ) {}
 
   @Post('signup-password')
@@ -74,9 +69,10 @@ export class AuthController {
     return this.authService.requestResetPassword(dto);
   }
 
-  @Get('reset-password/accuracy/:userId/:code')
-  accuracyCodeResetPassword(@Param() param: AccuracyPasswordRequestDto) {
-    return this.authService.accuracyCodeResetPassword(param);
+  @HttpCode(200)
+  @Post('reset-password/accuracy')
+  accuracyCodeResetPassword(@Body() dto: AccuracyPasswordRequestDto) {
+    return this.authService.accuracyCodeResetPassword(dto);
   }
 
   @HttpCode(200)

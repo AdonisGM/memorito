@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Group, Box, Collapse, ThemeIcon, Text, UnstyledButton, createStyles } from '@mantine/core';
-import { TablerIcon, IconCalendarStats, IconChevronLeft, IconChevronRight } from '@tabler/icons';
+import {IconCalendarStats, IconChevronLeft, IconChevronRight } from '@tabler/icons-react';
+import {useNavigate} from "react-router-dom";
 
 const useStyles = createStyles((theme) => ({
   control: {
     fontWeight: 500,
     display: 'block',
     width: '100%',
-    padding: `${theme.spacing.xs}px ${theme.spacing.md}px`,
+    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
     color: theme.colorScheme === 'dark' ? theme.colors.dark[0] : theme.black,
     fontSize: theme.fontSizes.sm,
 
@@ -21,7 +22,7 @@ const useStyles = createStyles((theme) => ({
     fontWeight: 500,
     display: 'block',
     textDecoration: 'none',
-    padding: `${theme.spacing.xs}px ${theme.spacing.md}px`,
+    padding: `${theme.spacing.xs} ${theme.spacing.md}`,
     paddingLeft: 31,
     marginLeft: 30,
     fontSize: theme.fontSizes.sm,
@@ -42,7 +43,7 @@ const useStyles = createStyles((theme) => ({
 }));
 
 interface LinksGroupProps {
-  icon: TablerIcon;
+  icon: any;
   label: string;
   initiallyOpened?: boolean;
   links?: { label: string; link: string }[];
@@ -52,14 +53,17 @@ export function LinksGroup({ icon: Icon, label, initiallyOpened, links }: LinksG
   const { classes, theme } = useStyles();
   const hasLinks = Array.isArray(links);
   const [opened, setOpened] = useState(initiallyOpened || false);
-  const ChevronIcon = theme.dir === 'ltr' ? IconChevronRight : IconChevronLeft;
+  const navigate = useNavigate();
   const items = (hasLinks ? links : []).map((link) => (
     <Text<'a'>
       component="a"
       className={classes.link}
       href={link.link}
       key={link.label}
-      onClick={(event) => event.preventDefault()}
+      onClick={(event) => {
+        event.preventDefault();
+        navigate(link.link);
+      }}
     >
       {link.label}
     </Text>
@@ -76,7 +80,7 @@ export function LinksGroup({ icon: Icon, label, initiallyOpened, links }: LinksG
             <Box ml="md">{label}</Box>
           </Box>
           {hasLinks && (
-            <ChevronIcon
+            <IconChevronRight
               className={classes.chevron}
               size={14}
               stroke={1.5}

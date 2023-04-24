@@ -1,0 +1,182 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Define the `User` table in the database
+model User {
+  userId                String    @id @default(uuid()) @db.VarChar(50)
+  name                  String    @db.VarChar(255)
+  email                 String    @unique() @db.VarChar(255)
+  password              String    @db.VarChar(255)
+  forgotPasswordCode    String?   @db.VarChar(255)
+  forgotPasswordCodeExp DateTime?
+  resetPasswordCode     String?   @db.VarChar(255)
+  resetPasswordCodeExp  DateTime?
+  active                Boolean   @default(false)
+  activeCode            String?   @db.VarChar(255)
+  activeCodeExp         DateTime?
+  avatar                String?   @db.VarChar(500)
+  isAdmin               Boolean   @default(false)
+  roleId                String?   @db.VarChar(50)
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  // references
+  refreshTokens     RefreshToken[]
+  role              Role?              @relation(fields: [roleId], references: [roleId], onDelete: NoAction, onUpdate: NoAction)
+  courses           Course[]
+  progressLearnings ProgressLearning[]
+  historyLearnings  HistoryLearning[]
+  Page              Page[]
+}
+
+// set name of the table in the database to `refresh_tokens`
+model RefreshToken {
+  refreshTokenId String   @id @default(uuid())
+  token          String   @unique @db.VarChar(200)
+  expires        DateTime
+  userId         String   @db.VarChar(50)
+
+  // references
+  user User @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Permission {
+  permissionId String   @id @default(uuid()) @db.VarChar(50)
+  name         String   @unique @db.VarChar(255)
+  value        String   @unique @db.VarChar(255)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  roleRoleId   String?  @db.VarChar(50)
+
+  // references
+  roles Role[]
+}
+
+model Role {
+  roleId      String   @id @default(uuid()) @db.VarChar(50)
+  name        String   @unique @db.VarChar(255)
+  value       String   @unique @db.VarChar(255)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  description String?  @db.VarChar(255)
+
+  // references
+  permissions Permission[]
+  users       User[]
+}
+
+model Course {
+  courseId    String   @id @default(uuid()) @db.VarChar(50)
+  name        String   @db.VarChar(255)
+  description String?  @db.VarChar(255)
+  ownerId     String   @db.VarChar(50)
+  pageId      String?  @db.VarChar(50)
+  isPublic    Boolean  @default(false)
+  isDraft     Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // references
+  owner            User               @relation(fields: [ownerId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  questions        Question[]
+  ProgressLearning ProgressLearning[]
+  HistoryLearning  HistoryLearning[]
+  Page             Page?              @relation(fields: [pageId], references: [pageId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Question {
+  questionId String   @id @default(uuid()) @db.VarChar(50)
+  content    String   @db.VarChar(255)
+  courseId   String   @db.VarChar(50)
+  type       String   @db.VarChar(50)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // references
+  course           Course             @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction)
+  answers          Answer[]
+  ProgressLearning ProgressLearning[]
+}
+
+model Answer {
+  answerId   String   @id @default(uuid()) @db.VarChar(50)
+  content    String   @db.VarChar(255)
+  questionId String   @db.VarChar(50)
+  isCorrect  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // references
+  question Question @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model ProgressLearning {
+  progressLearningId String   @id @default(uuid()) @db.VarChar(50)
+  userId             String   @db.VarChar(50)
+  courseId           String   @db.VarChar(50)
+  questionId         String   @db.VarChar(50)
+  correctTimes       Int      @default(0)
+  wrongTimes         Int      @default(0)
+  isCorrectLastTime  Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  // references
+  user     User     @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  course   Course   @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction)
+  question Question @relation(fields: [questionId], references: [questionId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model HistoryLearning {
+  historyLearningId String   @id @default(uuid()) @db.VarChar(50)
+  userId            String   @db.VarChar(50)
+  courseId          String   @db.VarChar(50)
+  totalQuestion     Int      @default(0)
+  totalCorrect      Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  // references
+  user   User   @relation(fields: [userId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  course Course @relation(fields: [courseId], references: [courseId], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Page {
+  pageId     String   @id @default(uuid()) @db.VarChar(50)
+  name       String   @db.VarChar(255)
+  content    String   @db.VarChar(255)
+  ownerId    String   @db.VarChar(50)
+  isOfficial Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // references
+  owner  User     @relation(fields: [ownerId], references: [userId], onDelete: NoAction, onUpdate: NoAction)
+  Course Course[]
+}
+
+model RolePage {
+  rolePageId  String  @id @default(uuid()) @db.VarChar(50)
+  roleId      String  @db.VarChar(50)
+  pageId      String? @db.VarChar(50)
+  description String? @db.VarChar(255)
+
+  // references
+  permissionPages PermissionPage[]
+}
+
+model PermissionPage {
+  permissionPageId String @id @default(uuid()) @db.VarChar(50)
+
+  // references
+  rolePages RolePage[]
+}

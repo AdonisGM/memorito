@@ -7,7 +7,8 @@ interface ApisTypes {
 
 const useApis = () => {
   const apis: ApisTypes[] = [
-    {name: 'sign_in_password', url: '/api/auth/signin-password', method: 'POST', contextType: 'application/json'}
+    {name: 'sign_in_password', url: '/api/auth/signin-password', method: 'POST', contextType: 'application/json'},
+    {name: 'user_info', url: '/api/user/info', method: 'GET', contextType: 'application/json'}
   ];
 
   const getByName = (name: string): ApisTypes | undefined => {

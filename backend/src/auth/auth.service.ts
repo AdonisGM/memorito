@@ -1,9 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
-import { User, UserDocument } from '../schemas/user.schema';
-import { v4 as uuidv4 } from 'uuid';
-import { nanoid } from 'nanoid';
+import {BadRequestException, Injectable} from '@nestjs/common';
+import {nanoid} from 'nanoid';
 import * as bcrypt from 'bcrypt';
 import {
   AccuracyPasswordRequestDto,
@@ -16,10 +12,12 @@ import {
   ResetPasswordDto,
   ResetPasswordRequestDto,
 } from './dto';
-import { JwtService } from '@nestjs/jwt';
-import * as process from 'process';
-import { IJwtPayload } from './auth.interface';
+import {JwtService} from '@nestjs/jwt';
+import {IJwtPayload} from './auth.interface';
 import moment from 'moment/moment';
+import {PrismaService} from "../prisma/prisma.service";
+import {Prisma} from "@prisma/client";
+import {MailjetService} from "../mailjet/mailjet.service";
 
 @Injectable()
 export class AuthService {
@@ -29,57 +27,70 @@ export class AuthService {
   private readonly LENGTH_NANOID = 64;
 
   constructor(
-    @InjectModel(User.name) private mongodbUserService: Model<UserDocument>,
+    private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly mailjetService: MailjetService,
   ) {
   }
 
   async signup(dto: PasswordSignupDto) {
-    const { name, email, password } = dto;
+    const {name, email, password} = dto;
 
     const hashedPassword = await this.hashPassword(password.trim());
-    const codeResetPassword = nanoid(this.LENGTH_NANOID);
+    const activeCode = nanoid(this.LENGTH_NANOID);
 
+    const data: Prisma.UserCreateInput = {
+      name: name.trim(),
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      active: false,
+      activeCode: activeCode,
+      activeCodeExp: moment().utc().add(1, 'd').toDate(),
+      createdAt: moment().utc().toDate(),
+      updatedAt: moment().utc().toDate()
+    };
+
+    let resultData = undefined;
     try {
-      await this.mongodbUserService.create({
-        userId: uuidv4(),
-        name: name.trim(),
-        email: email.toLowerCase(),
-        password: {
-          value: hashedPassword,
-        },
-        active: {
-          code: nanoid(this.LENGTH_NANOID),
-          exp: moment().utc().add(1, 'd').toDate(),
-        },
-        codeResetPassword: codeResetPassword,
-      });
+      resultData = await this.prisma.user.create({
+        data: data,
+      })
     } catch (error) {
-      if (error.code === 11000) {
+      console.log(error)
+      if (error.code === 'P2002') {
         throw new BadRequestException('error_auth_00001');
       } else {
         throw new BadRequestException('error_auth_00000');
       }
     }
 
+    await this.mailjetService.sendVerifyAccount({
+      userId: resultData.userId,
+      code: activeCode,
+      email: data.email,
+      name: data.name,
+    });
+
     return;
   }
 
   async signin(dto: PasswordSigninDto) {
-    const user = await this.mongodbUserService.findOne({
-      email: dto.email.toLowerCase(),
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email: dto.email.toLowerCase(),
+      }
     });
 
     if (!user) throw new BadRequestException('error_auth_00005');
-    if (!user.password.value) throw new BadRequestException('error_auth_00009');
+    if (!user.password) throw new BadRequestException('error_auth_00009');
 
     const validPassword = await bcrypt.compare(
       dto.password.trim(),
-      user.password.value,
+      user.password,
     );
 
     if (!validPassword) throw new BadRequestException('error_auth_00005');
-    if (!user.active.status) throw new BadRequestException('error_auth_00006');
+    if (!user.active) throw new BadRequestException('error_auth_00006');
 
     const accessToken = this.newAccessToken(user);
     const refreshToken = this.newRefreshToken(user);
@@ -87,15 +98,42 @@ export class AuthService {
     const payload = this.jwtService.decode(refreshToken) as IJwtPayload;
 
     await this.deleteExpRefreshToken(user);
+    const date = payload.exp * 1000;
+    const data: Prisma.RefreshTokenCreateInput = {
+      expires: moment(date).utc().toDate(),
+      token: refreshToken,
+      user: {
+        connect: {
+          userId: user.userId
+        }
+      }
+    };
+    await this.prisma.refreshToken.create({
+      data: data
+    })
 
-    user.refreshTokens.push({
-      value: refreshToken,
-      exp: payload.exp,
+    const role = await this.prisma.user.findFirst({
+      where: {
+        userId: user.userId,
+      },
+      select: {
+        isAdmin: true,
+        role: {
+          select: {
+            name: true,
+            value: true,
+            permissions: {
+              select: {
+                name: true,
+                value: true
+              }
+            }
+          }
+        }
+      }
     });
 
-    user.save();
-
-    return { accessToken, refreshToken };
+    return {accessToken, refreshToken, ...role};
   }
 
   async renewToken(dto: RenewTokenDto) {
@@ -108,19 +146,22 @@ export class AuthService {
       throw new BadRequestException('error_auth_00008');
     }
 
-    const user = await this.mongodbUserService.findOne({
-      userId: payload.userId,
+    const user = await this.prisma.user.findFirst({
+      where: {
+        userId: payload.userId,
+      }
     });
 
     if (!user) throw new BadRequestException('error_auth_00008');
-    if (!user.active.status) throw new BadRequestException('error_auth_00008');
+    if (!user.active) throw new BadRequestException('error_auth_00008');
 
-    const refreshTokenDb = user.refreshTokens.find((refreshToken) => {
-      return refreshToken.value === dto.refreshToken;
+    const refreshTokenDb = await this.prisma.refreshToken.findFirst({
+      where: {
+        token: dto.refreshToken,
+      }
     });
     if (!refreshTokenDb) throw new BadRequestException('error_auth_00008');
-    if (refreshTokenDb.exp < moment().utc().toDate().getTime() / 1000)
-      throw new BadRequestException('error_auth_00008');
+    if (refreshTokenDb.expires < moment().utc().toDate()) throw new BadRequestException('error_auth_00008');
 
     const accessToken = this.newAccessToken(user);
     const refreshToken = this.newRefreshToken(user);
@@ -128,30 +169,43 @@ export class AuthService {
     const newPayload = this.jwtService.decode(refreshToken) as IJwtPayload;
 
     await this.deleteExpRefreshToken(user);
-    await this.deleteReRefreshToken(user, refreshTokenDb.value);
+    await this.deleteReRefreshToken(refreshTokenDb.token);
 
-    user.refreshTokens.push({
-      value: refreshToken,
-      exp: newPayload.exp,
+    await this.prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        expires: moment(newPayload.exp * 1000).utc().toDate(),
+        user: {
+          connect: {
+            userId: user.userId
+          }
+        },
+      } as Prisma.RefreshTokenCreateInput
     });
 
-    user.save();
-
-    return { accessToken, refreshToken };
+    return {accessToken, refreshToken};
   }
 
   async createPassword(user: IJwtPayload, dto: CreatePasswordDto) {
     const newPassword = dto.newPassword.trim();
 
-    const userDb = await this.mongodbUserService.findOne({
-      userId: user.userId,
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        userId: user.userId,
+      }
     });
     if (!userDb) throw new BadRequestException('error_auth_00016');
-    if (userDb.password.value)
+    if (userDb.password)
       throw new BadRequestException('error_auth_00016');
 
-    userDb.password.value = await this.hashPassword(newPassword);
-    await userDb.save();
+    await this.prisma.user.update({
+      where: {
+        userId: user.userId,
+      },
+      data: {
+        password: await this.hashPassword(newPassword),
+      }
+    });
 
     return;
   }
@@ -163,16 +217,18 @@ export class AuthService {
     if (oldPassword === newPassword)
       throw new BadRequestException('error_auth_00012');
 
-    const userDb = await this.mongodbUserService.findOne({
-      userId: user.userId,
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        userId: user.userId,
+      }
     });
     if (!userDb) throw new BadRequestException('error_auth_00013');
-    if (!userDb.password.value)
+    if (!userDb.password)
       throw new BadRequestException('error_auth_00014');
 
     const isCorrectOldPassword = await bcrypt.compare(
       oldPassword,
-      userDb.password.value,
+      userDb.password,
     );
     if (!isCorrectOldPassword)
       throw new BadRequestException('error_auth_00015');
@@ -182,27 +238,62 @@ export class AuthService {
 
     const newPayload = this.jwtService.decode(refreshToken) as IJwtPayload;
 
-    userDb.password.value = await this.hashPassword(oldPassword);
-    userDb.refreshTokens = [{ value: refreshToken, exp: newPayload.exp }];
-    await userDb.save();
+    await this.prisma.user.update({
+      where: {
+        userId: user.userId
+      },
+      data: {
+        password: await this.hashPassword(newPassword),
+      }
+    })
+    await this.prisma.refreshToken.deleteMany({
+      where: {
+        userId: user.userId
+      }
+    })
+    await this.prisma.refreshToken.create({
+      data: {
+        user: {
+          connect: {
+            userId: user.userId
+          }
+        },
+        token: refreshToken,
+        expires: moment(newPayload.exp * 1000).utc().toDate(),
+      } as Prisma.RefreshTokenCreateInput
+    })
 
-    return { accessToken, refreshToken };
+    return {accessToken, refreshToken};
   }
 
   async activeAccount(dto: ActiveAccountDto) {
     const userId = dto.userId;
     const code = dto.code.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ userId: userId });
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        userId: userId,
+      }
+    });
     if (!userDb) throw new BadRequestException('error_auth_00018');
-    if (userDb.active.status) throw new BadRequestException('error_auth_00019');
-    if (userDb.active.code !== code)
+    if (userDb.active) throw new BadRequestException('error_auth_00019');
+    if (userDb.activeCode !== code)
       throw new BadRequestException('error_auth_00017');
-    if (userDb.active.exp < moment().utc().toDate())
+    if (userDb.activeCodeExp && userDb.activeCodeExp < moment().utc().toDate())
+      throw new BadRequestException('error_auth_00017');
+    else if (!userDb.activeCodeExp)
       throw new BadRequestException('error_auth_00017');
 
-    userDb.active.status = true;
-    await userDb.save();
+    await this.prisma.user.update({
+      where: {
+        userId: userId,
+      },
+      data: {
+        active: true,
+        activeCode: null,
+        activeCodeExp: null,
+      }
+    })
 
     return;
   }
@@ -210,31 +301,44 @@ export class AuthService {
   async requestResetPassword(dto: ResetPasswordRequestDto) {
     const email = dto.email.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ email: email });
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        email: email
+      }
+    });
     if (!userDb) return new BadRequestException('error_auth_00020');
 
     const code = nanoid(64);
-    //TODO: send email to user
 
-    userDb.password.code = code;
-    userDb.password.expCode = moment().utc().add(1, 'd').toDate();
-
-    await userDb.save();
+    await this.prisma.user.update({
+      where: {
+        userId: userDb.userId
+      },
+      data: {
+        resetPasswordCode: code,
+        resetPasswordCodeExp: moment().utc().add(1, 'd').toDate(),
+      } as Prisma.UserUpdateInput
+    });
 
     return;
   }
 
-  async accuracyCodeResetPassword(param: AccuracyPasswordRequestDto) {
-    const userId = param.userId.trim();
-    const code = param.code.trim();
+  async accuracyCodeResetPassword(dto: AccuracyPasswordRequestDto) {
+    const userId = dto.userId.trim();
+    const code = dto.code.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ userId: userId });
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        userId: userId
+      }
+    });
     if (!userDb) return new BadRequestException('error_auth_00021');
 
     const isValid =
-      userDb.password.code === code &&
-      userDb.password.expCode &&
-      userDb.password.expCode >= moment().utc().toDate();
+      userDb.password === code &&
+      userDb.resetPasswordCode &&
+      userDb.resetPasswordCodeExp &&
+      userDb.resetPasswordCodeExp >= moment().utc().toDate();
     if (!isValid) return new BadRequestException('error_auth_00021');
 
     return;
@@ -245,60 +349,68 @@ export class AuthService {
     const code = dto.code.trim();
     const password = dto.password.trim();
 
-    const userDb = await this.mongodbUserService.findOne({ userId: userId });
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        userId: userId
+      }
+    });
     if (!userDb) return new BadRequestException('error_auth_00022');
 
     const isValid =
-      userDb.password.code === code &&
-      userDb.password.expCode &&
-      userDb.password.expCode >= moment().utc().toDate();
+      userDb.password === code &&
+      userDb.resetPasswordCode &&
+      userDb.resetPasswordCodeExp &&
+      userDb.resetPasswordCodeExp >= moment().utc().toDate();
     if (!isValid) return new BadRequestException('error_auth_00022');
 
-    userDb.password = {
-      value: await this.hashPassword(password),
-      code: undefined,
-      expCode: undefined,
-    };
-    userDb.refreshTokens = [];
-    userDb.save();
+    await this.prisma.user.update({
+      where: {
+        userId: userId
+      },
+      data: {
+        password: await this.hashPassword(password),
+        resetPasswordCode: null,
+        resetPasswordCodeExp: null,
+      } as Prisma.UserUpdateInput
+    })
 
     return;
   }
 
   async checkActive(user: IJwtPayload) {
-    const userDb = await this.mongodbUserService.findOne({
-      userId: user.userId,
+    const userDb = await this.prisma.user.findFirst({
+      where: {
+        userId: user.userId,
+      }
     });
 
     if (!userDb) throw new BadRequestException('error_auth_00006');
-    if (!userDb.active.status)
+    if (!userDb.active)
       throw new BadRequestException('error_auth_00006');
   }
 
-  private async deleteExpRefreshToken(user: User): Promise<void> {
-    await this.mongodbUserService.updateOne(
-      { userId: user.userId },
-      {
-        $pull: {
-          refreshTokens: {
-            exp: { $lt: moment().utc().toDate().getTime() / 1000 },
-          },
-        },
-      },
-    );
+  private async deleteExpRefreshToken(user: Prisma.UserCreateInput): Promise<void> {
+    await this.prisma.refreshToken.deleteMany({
+      where: {
+        userId: user.userId,
+        expires: {
+          lt: moment().utc().toDate(),
+        }
+      }
+    })
   }
 
   private async deleteReRefreshToken(
-    user: User,
     refreshToken: string,
   ): Promise<void> {
-    await this.mongodbUserService.updateOne(
-      { userId: user.userId },
-      { $pull: { refreshTokens: { value: refreshToken } } },
-    );
+    await this.prisma.refreshToken.delete({
+      where: {
+        token: refreshToken,
+      }
+    })
   }
 
-  private newAccessToken(user: User): string {
+  private newAccessToken(user: Prisma.UserCreateInput): string {
     return this.jwtService.sign(
       {
         userId: user.userId,
@@ -310,7 +422,7 @@ export class AuthService {
     );
   }
 
-  private newRefreshToken(user: User): string {
+  private newRefreshToken(user: Prisma.UserCreateInput): string {
     return this.jwtService.sign(
       {
         userId: user.userId,
